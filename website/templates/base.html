@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}숭실대학교 공지사항{% endblock %}</title>
+    
+    <!-- 파비콘 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    
+    <!-- 추가 CSS -->
+    {% block styles %}{% endblock %}
+    
+    <!-- 메타 태그 -->
+    <meta name="description" content="숭실대학교 공지사항을 실시간으로 받아보세요">
+    <meta name="keywords" content="숭실대학교, 공지사항, 대학교, 알림, 구독">
+    <meta name="author" content="숭실대학교">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}숭실대학교 공지사항{% endblock %}">
+    <meta property="og:description" content="숭실대학교 공지사항을 실시간으로 받아보세요">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{{ url_for('static', filename='images/og-image.png', _external=True) }}">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header {% if not session.user %}header-landing{% endif %}">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="header-title">
+                    🏫 {% if session.user %}숭실대학교 공지사항{% else %}SSU 공지사항 알림{% endif %}
+                </h1>
+                {% if session.user %}
+                <div class="header-user">
+                    <span class="header-user-email">{{ session.user.email }}</span>
+                    <div class="user-menu">
+                        <button class="user-menu-toggle btn btn-secondary btn-sm" onclick="toggleUserMenu()">
+                            <span>계정 ▼</span>
+                        </button>
+                        <div class="user-menu-dropdown" id="user-menu-dropdown">
+                            <a href="{{ url_for('subscribe') }}" class="user-menu-item">
+                                <span>📋</span> 구독 관리
+                            </a>
+                            <a href="{{ url_for('delete_account') }}" class="user-menu-item delete-item">
+                                <span>🗑️</span> 회원탈퇴
+                            </a>
+                            <div class="user-menu-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="user-menu-item">
+                                <span>🚪</span> 로그아웃
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="header-actions">
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-white btn-sm">로그인</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- 네비게이션 (로그인한 경우에만 표시) -->
+    {% if session.user %}
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-content">
+                <a href="{{ url_for('index') }}" class="nav-brand">
+                    📢 SSU Notice
+                </a>
+                <ul class="nav-menu">
+                    <li>
+                        <a href="{{ url_for('index') }}" 
+                           class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                            홈
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('subscribe') }}" 
+                           class="nav-link {% if request.endpoint == 'subscribe' %}active{% endif %}">
+                            구독 관리
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer style="margin-top: 60px; padding: 40px 0; background: var(--background-tertiary); text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+        <div class="container">
+            <p>&copy; 2024 숭실대학교 공지사항 시스템. Made with ❤️</p>
+            <p style="margin-top: 8px;">
+                <span>실시간 공지사항 구독 서비스</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 공통 JavaScript 함수들
+        
+        // 알림 메시지 표시
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '1000';
+            alertDiv.style.minWidth = '300px';
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transform = 'translateX(100%)';
+            alertDiv.style.transition = 'all 0.3s ease';
+            alertDiv.textContent = message;
+            
+            document.body.appendChild(alertDiv);
+            
+            // 애니메이션
+            setTimeout(() => {
+                alertDiv.style.opacity = '1';
+                alertDiv.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // 자동 제거
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // 로딩 상태 표시
+        function showLoading(element) {
+            const originalText = element.textContent;
+            element.textContent = '처리 중...';
+            element.disabled = true;
+            return () => {
+                element.textContent = originalText;
+                element.disabled = false;
+            };
+        }
+        
+        // 날짜 포맷팅
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (days === 0) {
+                return '오늘';
+            } else if (days === 1) {
+                return '어제';
+            } else if (days < 7) {
+                return `${days}일 전`;
+            } else {
+                return date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+        }
+        
+        // 외부 링크 새 탭에서 열기
+        document.addEventListener('DOMContentLoaded', function() {
+            const externalLinks = document.querySelectorAll('a[href^="http"]');
+            externalLinks.forEach(link => {
+                if (!link.href.includes(window.location.hostname)) {
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                }
+            });
+        });
+        
+        // 키보드 네비게이션 지원
+        document.addEventListener('keydown', function(e) {
+            // ESC 키로 모달 닫기
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (modal.style.display !== 'none') {
+                        modal.style.display = 'none';
+                    }
+                });
+                
+                // 사용자 메뉴도 닫기
+                const userMenu = document.getElementById('user-menu-dropdown');
+                if (userMenu && userMenu.classList.contains('show')) {
+                    userMenu.classList.remove('show');
+                }
+            }
+        });
+        
+        // 사용자 메뉴 토글
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-menu-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+        
+        // 사용자 메뉴 외부 클릭 시 닫기
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('user-menu-dropdown');
+            
+            if (userMenu && dropdown && !userMenu.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        // 반응형 네비게이션 (모바일)
+        function toggleMobileMenu() {
+            const navMenu = document.querySelector('.nav-menu');
+            navMenu.classList.toggle('active');
+        }
+        
+        // 스크롤 이벤트로 헤더 그림자 효과
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 10) {
+                header.style.boxShadow = 'var(--shadow-lg)';
+            } else {
+                header.style.boxShadow = 'var(--shadow-md)';
+            }
+        });
+    </script>
+    
+    <!-- 추가 JavaScript -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

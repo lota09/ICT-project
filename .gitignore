@@ -1,0 +1,7 @@
+__pycache__
+test
+old
+init
+
+.env
+*.log

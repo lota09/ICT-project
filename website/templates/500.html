@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}서버 오류 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 40px 20px;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 120px;
+        margin-bottom: 20px;
+        display: block;
+    }
+    
+    .error-code {
+        font-size: 72px;
+        font-weight: bold;
+        color: var(--error-color);
+        margin-bottom: 10px;
+        letter-spacing: -2px;
+    }
+    
+    .error-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .error-description {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .error-button {
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 14px;
+    }
+    
+    .error-button-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .error-button-primary:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+    }
+    
+    .error-button-secondary {
+        background: var(--background-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-light);
+    }
+    
+    .error-button-secondary:hover {
+        background: var(--background-secondary);
+        transform: translateY(-1px);
+    }
+    
+    .error-info {
+        background: var(--background-secondary);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 32px 0;
+        border-left: 4px solid var(--warning-color);
+    }
+    
+    .error-info-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .error-info-text {
+        color: var(--text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+        .error-container {
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .error-icon {
+            font-size: 80px;
+        }
+        
+        .error-code {
+            font-size: 48px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+        }
+        
+        .error-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .error-button {
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <span class="error-icon">⚠️</span>
+    <div class="error-code">500</div>
+    <h1 class="error-title">서버 내부 오류</h1>
+    <p class="error-description">
+        죄송합니다. 서버에서 예상치 못한 오류가 발생했습니다.<br>
+        잠시 후 다시 시도해주시거나, 계속 문제가 발생하면 관리자에게 문의해주세요.
+    </p>
+    
+    <div class="error-info">
+        <div class="error-info-title">
+            <span>💡</span>
+            이런 경우에 도움이 될 수 있어요
+        </div>
+        <div class="error-info-text">
+            • 페이지를 새로고침해보세요<br>
+            • 잠시 후 다시 접속해보세요<br>
+            • 브라우저 캐시를 삭제해보세요<br>
+            • 문제가 지속되면 관리자에게 문의해주세요
+        </div>
+    </div>
+    
+    <div class="error-actions">
+        <button onclick="location.reload()" class="error-button error-button-primary">
+            <span>🔄</span>
+            페이지 새로고침
+        </button>
+        <a href="{{ url_for('index') }}" class="error-button error-button-secondary">
+            <span>🏠</span>
+            홈으로 돌아가기
+        </a>
+        {% if url_for('contact') %}
+        <a href="{{ url_for('contact') }}" class="error-button error-button-secondary">
+            <span>📧</span>
+            문의하기
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // 페이지 로드 시 오류 정보를 콘솔에 기록
+    console.error('500 Internal Server Error occurred at:', new Date().toISOString());
+    
+    // 자동 새로고침 카운터 (선택적)
+    let autoRefreshTimeout;
+    
+    function showAutoRefreshOption() {
+        const container = document.querySelector('.error-actions');
+        const autoRefreshBtn = document.createElement('button');
+        autoRefreshBtn.className = 'error-button error-button-secondary';
+        autoRefreshBtn.innerHTML = '<span>⏱️</span> 30초 후 자동 새로고침';
+        autoRefreshBtn.disabled = true;
+        container.appendChild(autoRefreshBtn);
+        
+        let countdown = 30;
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            autoRefreshBtn.innerHTML = `<span>⏱️</span> ${countdown}초 후 자동 새로고침`;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                location.reload();
+            }
+        }, 1000);
+        
+        // 사용자가 다른 버튼을 클릭하면 자동 새로고침 취소
+        document.querySelectorAll('.error-button:not(:last-child)').forEach(btn => {
+            btn.addEventListener('click', () => {
+                clearInterval(countdownInterval);
+                clearTimeout(autoRefreshTimeout);
+            });
+        });
+    }
+    
+    // 5초 후 자동 새로고침 옵션 표시 (선택적)
+    // autoRefreshTimeout = setTimeout(showAutoRefreshOption, 5000);
+</script>
+{% endblock %}

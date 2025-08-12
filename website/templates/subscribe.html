@@ -1,0 +1,797 @@
+{% extends "base.html" %}
+
+{% block title %}구독 관리 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .subscribe-content {
+        padding: 30px 0;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+    
+    .page-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+    
+    .page-description {
+        background: var(--background-tertiary);
+        padding: 20px;
+        border-radius: var(--radius-lg);
+        color: var(--text-secondary);
+        margin-bottom: 30px;
+    }
+    
+    .subscription-form {
+        background: var(--background-primary);
+        padding: 30px;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 30px;
+    }
+    
+    .form-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .form-description {
+        color: var(--text-muted);
+    }
+    
+    .subscription-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .subscription-card {
+        background: var(--background-secondary);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        transition: var(--transition-normal);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .subscription-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--border-light);
+        transition: var(--transition-normal);
+    }
+    
+    .subscription-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .subscription-card:hover::before {
+        background: var(--primary-color);
+    }
+    
+    .subscription-card.selected {
+        border-color: var(--primary-color);
+        background: var(--background-primary);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .subscription-card.selected::before {
+        background: var(--primary-color);
+    }
+    
+    .card-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .card-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--primary-color);
+        margin-top: 2px;
+        cursor: pointer;
+    }
+    
+    .card-content {
+        flex: 1;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .card-description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+    
+    .card-url {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-family: 'Consolas', monospace;
+        background: var(--background-tertiary);
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        word-break: break-all;
+    }
+    
+    .card-stats {
+        display: flex;
+        gap: 16px;
+        margin-top: 12px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .select-all-section {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: var(--background-tertiary);
+        border-radius: var(--radius-md);
+    }
+    
+    .select-all-btn {
+        background: transparent;
+        border: 1px solid var(--border-medium);
+        color: var(--text-secondary);
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition-normal);
+        margin: 0 8px;
+    }
+    
+    .select-all-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .subscription-summary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        color: white;
+        padding: 24px;
+        border-radius: var(--radius-lg);
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .summary-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .summary-count {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .summary-text {
+        opacity: 0.9;
+    }
+    
+    .subscription-section {
+        margin-bottom: 40px;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-light);
+    }
+    
+    .dropdown-container {
+        background: var(--background-secondary);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    
+    .college-section {
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .college-section:last-child {
+        border-bottom: none;
+    }
+    
+    .college-header {
+        padding: 16px 20px;
+        background: var(--background-tertiary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: var(--transition-normal);
+        user-select: none;
+    }
+    
+    .college-header:hover {
+        background: var(--primary-light);
+        color: white;
+    }
+    
+    .college-name {
+        font-weight: 600;
+        flex: 1;
+    }
+    
+    .college-count {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .expand-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    .college-header.expanded .expand-icon {
+        transform: rotate(180deg);
+    }
+    
+    .department-list {
+        padding: 0 20px 20px;
+        background: var(--background-primary);
+    }
+    
+    .department-group {
+        margin-bottom: 16px;
+    }
+    
+    .department-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        font-weight: 500;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .major-list {
+        margin-top: 8px;
+    }
+    
+    .subscription-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        margin: 4px 0;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition-normal);
+        background: var(--background-secondary);
+    }
+    
+    .subscription-item:hover {
+        background: var(--background-tertiary);
+        transform: translateX(4px);
+    }
+    
+    .subscription-item.selected {
+        background: var(--primary-light);
+        color: white;
+    }
+    
+    .subscription-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary-color);
+    }
+    
+    .item-info {
+        flex: 1;
+    }
+    
+    .item-title {
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+    
+    .item-url {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        font-family: 'Consolas', monospace;
+        word-break: break-all;
+    }
+
+    @media (max-width: 768px) {
+        .subscription-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .subscription-form {
+            padding: 20px;
+        }
+        
+        .college-header {
+            padding: 12px 16px;
+        }
+        
+        .department-list {
+            padding: 0 16px 16px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscribe-content">
+    <!-- 페이지 헤더 -->
+    <div class="page-header">
+        <h1 class="page-title">📋 구독 관리</h1>
+        <p class="page-subtitle">원하는 공지사항 카테고리를 선택하세요</p>
+        
+        <div class="page-description">
+            <p>선택한 카테고리의 새로운 공지사항이 올라오면 메인 페이지에서 확인할 수 있습니다.</p>
+        </div>
+    </div>
+    
+    <!-- 구독 현황 요약 -->
+    <div class="subscription-summary" id="subscription-summary">
+        <div class="summary-title">현재 구독 중</div>
+        <div class="summary-count" id="selected-count">{{ subscribed_ids|length }}</div>
+        <div class="summary-text">개 카테고리</div>
+    </div>
+    
+    <!-- 구독 폼 -->
+    <div class="subscription-form">
+        <div class="form-header">
+            <h2 class="form-title">📬 공지사항 카테고리</h2>
+            <p class="form-description">관심 있는 카테고리를 선택하여 구독하세요</p>
+        </div>
+        
+        <!-- 전체 선택/해제 -->
+        <div class="select-all-section">
+            <button type="button" class="select-all-btn" onclick="selectAll()">전체 선택</button>
+            <button type="button" class="select-all-btn" onclick="selectNone()">전체 해제</button>
+        </div>
+        
+        <!-- 버튼 방식 구독 목록 -->
+        <div class="subscription-section">
+            <h3 class="section-title">📚 기본 공지사항 카테고리</h3>
+            <div class="subscription-grid" id="button-grid">
+                {% for notification in button_notifications %}
+                <div class="subscription-card {% if notification[0]|string in subscribed_ids %}selected{% endif %}">
+                    <div class="card-checkbox">
+                        <input type="checkbox" 
+                               id="sub-{{ notification[0] }}" 
+                               value="{{ notification[0] }}"
+                               {% if notification[0]|string in subscribed_ids %}checked{% endif %}>
+                        <div class="card-content">
+                            <h3 class="card-title">
+                                {{ get_category_icon(notification[1]) }} {{ notification[1] }}
+                            </h3>
+                            <p class="card-description">
+                                {{ get_category_description(notification[1]) }}
+                            </p>
+                            <div class="card-url">{{ notification[2] }}</div>
+                            <div class="card-stats">
+                                <div class="stat-item">
+                                    <span>📊</span>
+                                    <span>주간 평균 {{ get_weekly_avg(notification[0]) }}건</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>🕒</span>
+                                    <span>최근 업데이트</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 드롭다운 방식 구독 목록 -->
+        <div class="subscription-section">
+            <h3 class="section-title">🏛️ 학과별 공지사항</h3>
+            <div class="dropdown-container">
+                {% for college, departments in dropdown_data.items() %}
+                <div class="college-section">
+                    <div class="college-header" onclick="toggleCollege(this)">
+                        <span class="college-icon">🏫</span>
+                        <span class="college-name">{{ college }}</span>
+                        <span class="college-count">({{ departments|length }}개 학과)</span>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="department-list" id="college-{{ loop.index }}" style="display: none;">
+                        {% for department, majors in departments.items() %}
+                        <div class="department-group">
+                            <div class="department-header">
+                                <span class="department-icon">📖</span>
+                                <span class="department-name">{{ department }}</span>
+                            </div>
+                            <div class="major-list">
+                                {% for major_info in majors %}
+                                <div class="subscription-item {% if major_info.id|string in subscribed_ids %}selected{% endif %}">
+                                    <input type="checkbox" 
+                                           id="dropdown-sub-{{ major_info.id }}" 
+                                           value="{{ major_info.id }}"
+                                           {% if major_info.id|string in subscribed_ids %}checked{% endif %}>
+                                    <div class="item-info">
+                                        <div class="item-title">
+                                            {% if major_info.major %}
+                                                {{ major_info.major }}
+                                            {% else %}
+                                                {{ department }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="item-url">{{ major_info.url }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 폼 액션 -->
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline" onclick="resetSubscriptions()">
+                초기화
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveSubscriptions()">
+                구독 설정 저장
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let originalSubscriptions = {{ subscribed_ids|tojson }};
+    
+    // 전역 함수들 - HTML onclick에서 사용
+    window.toggleCollege = function(headerElement) {
+        headerElement.classList.toggle('expanded');
+        const departmentList = headerElement.nextElementSibling;
+        if (departmentList && departmentList.classList.contains('department-list')) {
+            if (departmentList.style.display === 'none' || departmentList.style.display === '') {
+                departmentList.style.display = 'block';
+            } else {
+                departmentList.style.display = 'none';
+            }
+        }
+    };
+    
+    window.selectAll = function() {
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = true;
+            if (checkbox.closest('.subscription-card')) {
+                updateCard(checkbox);
+            } else if (checkbox.closest('.subscription-item')) {
+                updateDropdownItem(checkbox);
+            }
+        });
+        showAlert('모든 카테고리가 선택되었습니다.', 'success');
+    };
+    
+    window.selectNone = function() {
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+            if (checkbox.closest('.subscription-card')) {
+                updateCard(checkbox);
+            } else if (checkbox.closest('.subscription-item')) {
+                updateDropdownItem(checkbox);
+            }
+        });
+        showAlert('모든 카테고리가 해제되었습니다.', 'success');
+    };
+    
+    window.resetSubscriptions = function() {
+        if (confirm('구독 설정을 초기 상태로 되돌리시겠습니까?')) {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const id = checkbox.value;
+                checkbox.checked = originalSubscriptions.includes(id);
+                if (checkbox.closest('.subscription-card')) {
+                    updateCard(checkbox);
+                } else if (checkbox.closest('.subscription-item')) {
+                    updateDropdownItem(checkbox);
+                }
+            });
+            showAlert('구독 설정이 초기화되었습니다.', 'success');
+        }
+    };
+    
+    window.saveSubscriptions = async function() {
+        const selectedIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                                .map(cb => parseInt(cb.value));
+        
+        const saveBtn = document.querySelector('.btn-primary');
+        const hideLoading = showLoading(saveBtn);
+        
+        try {
+            const response = await fetch('/update-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ selected_notifications: selectedIds })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                originalSubscriptions = [...selectedIds];
+                showAlert('구독 설정이 저장되었습니다.', 'success');
+            } else {
+                showAlert('저장 중 오류가 발생했습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('서버 연결 오류가 발생했습니다.', 'error');
+        } finally {
+            hideLoading();
+        }
+    };
+    
+    // 카테고리별 아이콘 반환
+    function getCategoryIcon(title) {
+        const icons = {
+            '학사공지': '📚',
+            '일반공지': '📢',
+            '장학공지': '💰',
+            '취업공지': '💼',
+            '학술공지': '🔬',
+            '국제공지': '🌍'
+        };
+        return icons[title] || '📋';
+    }
+    
+    // 카테고리별 설명 반환
+    function getCategoryDescription(title) {
+        const descriptions = {
+            '학사공지': '수강신청, 시험일정, 학적 관련 중요 공지사항',
+            '일반공지': '대학 생활 전반에 관한 일반적인 안내사항',
+            '장학공지': '장학금 신청, 선발결과 등 장학 관련 정보',
+            '취업공지': '채용정보, 취업박람회, 진로 관련 안내',
+            '학술공지': '학술행사, 연구활동, 세미나 관련 정보',
+            '국제공지': '교환학생, 해외연수, 국제프로그램 안내'
+        };
+        return descriptions[title] || '관련 공지사항을 받아보세요';
+    }
+    
+    // 주간 평균 공지 수 (더미 데이터)
+    function getWeeklyAvg(id) {
+        const avgData = {
+            1: '3-5',
+            2: '2-4', 
+            3: '1-2',
+            4: '5-7'
+        };
+        return avgData[id] || '2-3';
+    }
+    
+    // 구독 토글
+    function toggleSubscription(id, cardElement) {
+        const checkbox = cardElement.querySelector('input[type="checkbox"]');
+        checkbox.checked = !checkbox.checked;
+        updateCard(checkbox);
+    }
+    
+    // 카드 상태 업데이트
+    function updateCard(checkbox) {
+        const card = checkbox.closest('.subscription-card');
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+        updateSummary();
+    }
+    
+    // 요약 정보 업데이트
+    function updateSummary() {
+        const selectedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+        document.getElementById('selected-count').textContent = selectedCount;
+        
+        // 요약 박스 색상 변경
+        const summaryBox = document.getElementById('subscription-summary');
+        if (selectedCount === 0) {
+            summaryBox.style.background = 'linear-gradient(135deg, var(--text-muted) 0%, var(--text-light) 100%)';
+        } else {
+            summaryBox.style.background = 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%)';
+        }
+    }
+    
+    // 드롭다운 구독 토글
+    function toggleDropdownSubscription(id, element) {
+        const checkbox = element.querySelector('input[type="checkbox"]');
+        checkbox.checked = !checkbox.checked;
+        updateDropdownItem(checkbox);
+    }
+    
+    // 드롭다운 항목 업데이트
+    function updateDropdownItem(checkbox) {
+        const item = checkbox.closest('.subscription-item');
+        if (checkbox.checked) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+        updateSummary();
+    }
+    
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Subscribe page loaded');
+        
+        // 초기 요약 정보 설정
+        updateSummary();
+        
+        // 모든 체크박스 찾기 및 로그
+        const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+        console.log('Found checkboxes:', allCheckboxes.length);
+        
+        // 모든 체크박스에 이벤트 리스너 추가
+        allCheckboxes.forEach(function(checkbox, index) {
+            console.log('Adding listener to checkbox', index, checkbox.value);
+            checkbox.addEventListener('change', function() {
+                console.log('Checkbox changed:', this.value, this.checked);
+                if (this.closest('.subscription-card')) {
+                    console.log('Updating card');
+                    updateCard(this);
+                } else if (this.closest('.subscription-item')) {
+                    console.log('Updating dropdown item');
+                    updateDropdownItem(this);
+                }
+            });
+        });
+        
+        // 카드 클릭 이벤트 (체크박스 제외)
+        const subscriptionCards = document.querySelectorAll('.subscription-card');
+        console.log('Found subscription cards:', subscriptionCards.length);
+        
+        subscriptionCards.forEach(function(card, index) {
+            console.log('Adding click listener to card', index);
+            card.addEventListener('click', function(e) {
+                console.log('Card clicked:', e.target.type);
+                if (e.target.type === 'checkbox') return;
+                
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    console.log('Toggling checkbox in card');
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+        
+        // 드롭다운 아이템 클릭 이벤트
+        const subscriptionItems = document.querySelectorAll('.subscription-item');
+        console.log('Found subscription items:', subscriptionItems.length);
+        
+        subscriptionItems.forEach(function(item, index) {
+            console.log('Adding click listener to item', index);
+            item.addEventListener('click', function(e) {
+                console.log('Item clicked:', e.target.type);
+                if (e.target.type === 'checkbox') return;
+                
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    console.log('Toggling checkbox in item');
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+        
+        // 카드 애니메이션
+        const cards = document.querySelectorAll('.subscription-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.4s ease';
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 150);
+        });
+    });
+    
+    // 키보드 단축키
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + A로 전체 선택
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+            e.preventDefault();
+            selectAll();
+        }
+        
+        // Ctrl/Cmd + S로 저장
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            saveSubscriptions();
+        }
+        
+        // ESC로 초기화
+        if (e.key === 'Escape') {
+            resetSubscriptions();
+        }
+    });
+    
+    // 페이지 이탈 전 확인
+    window.addEventListener('beforeunload', function(e) {
+        const currentIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                               .map(cb => cb.value);
+        const hasChanges = JSON.stringify(currentIds.sort()) !== JSON.stringify(originalSubscriptions.sort());
+        
+        if (hasChanges) {
+            e.preventDefault();
+            e.returnValue = '저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠습니까?';
+            return e.returnValue;
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}문의하기 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .contact-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .contact-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .contact-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .contact-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .contact-info {
+        background: white;
+        padding: 30px;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .contact-form {
+        background: white;
+        padding: 30px;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .info-section {
+        margin-bottom: 30px;
+    }
+    
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .info-content {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+    
+    .info-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .info-list li {
+        padding: 8px 0;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .info-list li .icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+    }
+    
+    .form-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-label.required::after {
+        content: '*';
+        color: var(--error-color);
+        margin-left: 4px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        transition: var(--transition-normal);
+        background: var(--background-primary);
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.1);
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        transition: var(--transition-normal);
+        background: var(--background-primary);
+        cursor: pointer;
+    }
+    
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.1);
+    }
+    
+    .submit-button {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-normal);
+    }
+    
+    .submit-button:hover {
+        background: var(--primary-light);
+        transform: translateY(-2px);
+    }
+    
+    .submit-button:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition-normal);
+    }
+    
+    .back-button:hover {
+        color: var(--primary-light);
+    }
+    
+    .faq-section {
+        background: white;
+        padding: 30px;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-top: 30px;
+    }
+    
+    .faq-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    
+    .faq-item {
+        border-bottom: 1px solid var(--border-light);
+        padding: 20px 0;
+    }
+    
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+    
+    .faq-question {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .faq-question::before {
+        content: '❓';
+        font-size: 1.2rem;
+    }
+    
+    .faq-answer {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        padding-left: 32px;
+    }
+    
+    .warning-box {
+        background-color: rgba(var(--accent-color), 0.1);
+        border: 1px solid var(--accent-color);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-bottom: 30px;
+    }
+    
+    .warning-box .warning-icon {
+        color: var(--accent-color);
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .contact-container {
+            padding: 30px 20px;
+        }
+        
+        .contact-info,
+        .contact-form,
+        .faq-section {
+            padding: 20px;
+        }
+        
+        .contact-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="/" class="back-button">
+        ← 홈으로 돌아가기
+    </a>
+    
+    <div class="contact-container">
+        <div class="contact-header">
+            <h1 class="contact-title">문의하기</h1>
+            <p class="contact-subtitle">
+                서비스 이용 중 문의사항이나 개선 제안이 있으시면<br>
+                언제든지 연락해 주세요. 빠른 시일 내에 답변드리겠습니다.
+            </p>
+        </div>
+        
+        <div class="warning-box">
+            <span class="warning-icon">⚠️</span>
+            <strong>안내:</strong> 본 서비스는 숭실대학교 공식 서비스가 아닌 개인 프로젝트입니다. 학교 관련 공식 문의는 숭실대학교 홈페이지를 이용해 주세요.
+        </div>
+        
+        <div class="contact-grid">
+            <div class="contact-info">
+                <div class="info-section">
+                    <h3 class="info-title">
+                        📞 연락처 정보
+                    </h3>
+                    <div class="info-content">
+                        서비스 관련 문의나 버그 신고, 개선 제안 등을 받고 있습니다.
+                    </div>
+                    <ul class="info-list">
+                        <li>
+                            <span class="icon">📧</span>
+                            우측 문의 양식을 통해 연락
+                        </li>
+                        <li>
+                            <span class="icon">⏰</span>
+                            응답시간: 1-2일 이내
+                        </li>
+                        <li>
+                            <span class="icon">🔧</span>
+                            버그 신고는 우선 처리
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3 class="info-title">
+                        💡 문의 유형
+                    </h3>
+                    <ul class="info-list">
+                        <li>
+                            <span class="icon">🐛</span>
+                            버그 신고 및 오류 문의
+                        </li>
+                        <li>
+                            <span class="icon">💡</span>
+                            기능 개선 제안
+                        </li>
+                        <li>
+                            <span class="icon">❓</span>
+                            서비스 이용 문의
+                        </li>
+                        <li>
+                            <span class="icon">🔒</span>
+                            개인정보 관련 문의
+                        </li>
+                        <li>
+                            <span class="icon">⚖️</span>
+                            기타 법적 문의
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="contact-form">
+                <h3 class="form-title">
+                    📝 문의 양식
+                </h3>
+                
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="name" class="form-label required">이름</label>
+                        <input type="text" id="name" name="name" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label required">이메일</label>
+                        <input type="email" id="email" name="email" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category" class="form-label required">문의 유형</label>
+                        <select id="category" name="category" class="form-select" required>
+                            <option value="">선택해주세요</option>
+                            <option value="bug">버그 신고</option>
+                            <option value="feature">기능 개선 제안</option>
+                            <option value="support">이용 문의</option>
+                            <option value="privacy">개인정보 관련</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject" class="form-label required">제목</label>
+                        <input type="text" id="subject" name="subject" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message" class="form-label required">문의 내용</label>
+                        <textarea id="message" name="message" class="form-input form-textarea" required 
+                                  placeholder="문의 내용을 상세히 작성해주세요. 버그 신고의 경우 발생 상황과 브라우저 정보를 함께 알려주시면 더 빠른 해결이 가능합니다."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-button">
+                        문의 보내기 📤
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- FAQ 섹션 -->
+        <div class="faq-section">
+            <h3 class="faq-title">자주 묻는 질문 (FAQ)</h3>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    이 서비스는 숭실대학교 공식 서비스인가요?
+                </div>
+                <div class="faq-answer">
+                    아니요. 이 서비스는 숭실대학교와 공식적으로 연관되지 않은 개인 프로젝트입니다. 숭실대학교의 공개된 공지사항을 수집하여 제공하는 비공식 서비스입니다.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    공지사항이 실시간으로 업데이트 되나요?
+                </div>
+                <div class="faq-answer">
+                    네, 주기적으로 숭실대학교 홈페이지의 공지사항을 수집하여 업데이트합니다. 단, 네트워크 상황이나 서버 상태에 따라 지연될 수 있습니다.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    개인정보는 안전하게 관리되나요?
+                </div>
+                <div class="faq-answer">
+                    네, Google OAuth를 통해 최소한의 정보(이메일, 이름)만 수집하며, 수집된 정보는 서비스 제공 목적으로만 사용됩니다. 자세한 내용은 개인정보처리방침을 참고해 주세요.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    서비스 이용에 비용이 발생하나요?
+                </div>
+                <div class="faq-answer">
+                    아니요, 완전 무료 서비스입니다. 현재와 미래에도 어떠한 비용도 발생하지 않습니다.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    모바일에서도 이용할 수 있나요?
+                </div>
+                <div class="faq-answer">
+                    네, 반응형 웹 디자인으로 제작되어 PC, 태블릿, 스마트폰 등 모든 기기에서 이용 가능합니다.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    구독을 해지하려면 어떻게 하나요?
+                </div>
+                <div class="faq-answer">
+                    로그인 후 '구독 관리' 페이지에서 원하지 않는 카테고리의 구독을 해지할 수 있습니다. 완전히 서비스를 중단하시려면 로그아웃 후 더 이상 접속하지 않으시면 됩니다.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitButton = document.querySelector('.submit-button');
+        const originalText = submitButton.textContent;
+        
+        // 버튼 비활성화 및 로딩 상태
+        submitButton.disabled = true;
+        submitButton.textContent = '전송 중... ⏳';
+        
+        // 폼 데이터 수집
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            category: formData.get('category'),
+            subject: formData.get('subject'),
+            message: formData.get('message')
+        };
+        
+        // 서버에 전송 (실제 구현에서는 서버 엔드포인트로 전송)
+        fetch('/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('문의가 성공적으로 전송되었습니다. 빠른 시일 내에 답변드리겠습니다.', 'success');
+                this.reset(); // 폼 초기화
+            } else {
+                throw new Error(data.message || '전송 중 오류가 발생했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Contact form error:', error);
+            showAlert('현재 문의 전송 기능을 준비 중입니다. 불편을 드려 죄송합니다.', 'warning');
+        })
+        .finally(() => {
+            // 버튼 상태 복원
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        });
+    });
+    
+    // 카테고리 선택에 따른 제목 자동 완성
+    document.getElementById('category').addEventListener('change', function() {
+        const subjectInput = document.getElementById('subject');
+        const category = this.value;
+        
+        if (!subjectInput.value) { // 제목이 비어있을 때만
+            const subjects = {
+                'bug': '[버그 신고] ',
+                'feature': '[기능 제안] ',
+                'support': '[이용 문의] ',
+                'privacy': '[개인정보] ',
+                'other': '[기타] '
+            };
+            
+            if (subjects[category]) {
+                subjectInput.value = subjects[category];
+                subjectInput.focus();
+                subjectInput.setSelectionRange(subjects[category].length, subjects[category].length);
+            }
+        }
+    });
+    
+    // FAQ 아이템 클릭으로 토글
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', function() {
+            const answer = this.nextElementSibling;
+            const isVisible = answer.style.display === 'block';
+            
+            // 모든 답변 닫기
+            document.querySelectorAll('.faq-answer').forEach(ans => {
+                ans.style.display = 'none';
+            });
+            
+            // 클릭한 항목만 토글
+            if (!isVisible) {
+                answer.style.display = 'block';
+            }
+        });
+    });
+    
+    // 폼 검증 개선
+    document.querySelectorAll('.form-input, .form-select').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                this.style.borderColor = 'var(--error-color)';
+            } else {
+                this.style.borderColor = 'var(--border-light)';
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.style.borderColor === 'rgb(239, 68, 68)') { // error color
+                this.style.borderColor = 'var(--border-light)';
+            }
+        });
+    });
+</script>
+{% endblock %}

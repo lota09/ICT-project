@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}허용되지 않은 메소드 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 40px 20px;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 120px;
+        margin-bottom: 20px;
+        display: block;
+    }
+    
+    .error-code {
+        font-size: 72px;
+        font-weight: bold;
+        color: var(--warning-color);
+        margin-bottom: 10px;
+        letter-spacing: -2px;
+    }
+    
+    .error-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .error-description {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .error-button {
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 14px;
+    }
+    
+    .error-button-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .error-button-primary:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+    }
+    
+    .error-button-secondary {
+        background: var(--background-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-light);
+    }
+    
+    .error-button-secondary:hover {
+        background: var(--background-secondary);
+        transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+        .error-container {
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .error-icon {
+            font-size: 80px;
+        }
+        
+        .error-code {
+            font-size: 48px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+        }
+        
+        .error-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .error-button {
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <span class="error-icon">🚷</span>
+    <div class="error-code">405</div>
+    <h1 class="error-title">허용되지 않은 요청 방법</h1>
+    <p class="error-description">
+        이 페이지에서는 해당 요청 방법을 지원하지 않습니다.<br>
+        올바른 방법으로 다시 접근해주시거나 다른 페이지를 이용해주세요.
+    </p>
+    
+    <div class="error-actions">
+        <button onclick="history.back()" class="error-button error-button-primary">
+            <span>←</span>
+            이전 페이지로
+        </button>
+        <a href="{{ url_for('index') }}" class="error-button error-button-secondary">
+            <span>🏠</span>
+            홈으로 돌아가기
+        </a>
+    </div>
+</div>
+
+<script>
+    // 뒤로가기 버튼 처리
+    if (document.referrer === '' || document.referrer === window.location.href) {
+        const backButton = document.querySelector('button[onclick="history.back()"]');
+        if (backButton) {
+            backButton.textContent = '홈으로 돌아가기';
+            backButton.innerHTML = '<span>🏠</span> 홈으로 돌아가기';
+            backButton.onclick = () => window.location.href = '{{ url_for("index") }}';
+        }
+    }
+</script>
+{% endblock %}

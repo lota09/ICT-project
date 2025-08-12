@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+
+{% block title %}회원탈퇴 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .delete-card {
+        background: white;
+        padding: 40px;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        text-align: center;
+    }
+    
+    .delete-header {
+        margin-bottom: 30px;
+    }
+    
+    .delete-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: var(--error-color);
+    }
+    
+    .delete-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+    
+    .delete-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .warning-section {
+        background: rgba(var(--error-color), 0.1);
+        border: 2px solid var(--error-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .warning-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--error-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .warning-list {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text-primary);
+    }
+    
+    .warning-list li {
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+    
+    .info-section {
+        background: var(--background-secondary);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .info-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .info-content {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+    
+    .confirmation-section {
+        margin: 30px 0;
+        padding: 24px;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-lg);
+        background: var(--background-tertiary);
+    }
+    
+    .confirmation-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .confirmation-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        margin-bottom: 16px;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .confirmation-input:focus {
+        outline: none;
+        border-color: var(--error-color);
+        box-shadow: 0 0 0 3px rgba(var(--error-color), 0.1);
+    }
+    
+    .confirmation-input.valid {
+        border-color: var(--success-color);
+        background-color: rgba(var(--success-color), 0.1);
+    }
+    
+    .confirmation-text {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        text-align: center;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .cancel-button {
+        padding: 12px 24px;
+        background: var(--background-tertiary);
+        color: var(--text-secondary);
+        border: 2px solid var(--border-medium);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition-normal);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .cancel-button:hover {
+        background: var(--background-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-dark);
+    }
+    
+    .delete-button {
+        padding: 12px 24px;
+        background: var(--error-color);
+        color: white;
+        border: 2px solid var(--error-color);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-normal);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .delete-button:hover:not(:disabled) {
+        background: #DC2626;
+        border-color: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .delete-button:disabled {
+        background: var(--text-muted);
+        border-color: var(--text-muted);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition-normal);
+    }
+    
+    .back-button:hover {
+        color: var(--primary-light);
+    }
+    
+    .user-info {
+        background: var(--background-secondary);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: left;
+    }
+    
+    .user-info-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: var(--text-secondary);
+    }
+    
+    .user-detail {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .user-detail-label {
+        font-weight: 500;
+    }
+    
+    .user-detail-value {
+        font-family: 'Courier New', monospace;
+        background: rgba(var(--primary-color), 0.1);
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+    }
+    
+    @media (max-width: 768px) {
+        .delete-container {
+            padding: 30px 20px;
+        }
+        
+        .delete-card {
+            padding: 30px 20px;
+        }
+        
+        .delete-title {
+            font-size: 1.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .cancel-button,
+        .delete-button {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .user-detail {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="/" class="back-button">
+        ← 홈으로 돌아가기
+    </a>
+    
+    <div class="delete-container">
+        <div class="delete-card">
+            <div class="delete-header">
+                <div class="delete-icon">⚠️</div>
+                <h1 class="delete-title">회원탈퇴</h1>
+                <p class="delete-subtitle">
+                    정말로 계정을 삭제하시겠습니까?<br>
+                    이 작업은 되돌릴 수 없습니다.
+                </p>
+            </div>
+            
+            <!-- 사용자 정보 표시 -->
+            <div class="user-info">
+                <div class="user-info-title">탈퇴할 계정 정보</div>
+                <div class="user-details">
+                    <div class="user-detail">
+                        <span class="user-detail-label">이름:</span>
+                        <span class="user-detail-value">{{ session.user.name }}</span>
+                    </div>
+                    <div class="user-detail">
+                        <span class="user-detail-label">이메일:</span>
+                        <span class="user-detail-value">{{ session.user.email }}</span>
+                    </div>
+                    <div class="user-detail">
+                        <span class="user-detail-label">가입일:</span>
+                        <span class="user-detail-value" id="join-date">확인 중...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 경고 섹션 -->
+            <div class="warning-section">
+                <div class="warning-title">
+                    ⚠️ 계정 삭제 시 다음 데이터가 영구적으로 삭제됩니다:
+                </div>
+                <ul class="warning-list">
+                    <li><strong>구독 설정:</strong> 모든 공지사항 구독 정보</li>
+                    <li><strong>개인 정보:</strong> 이름, 이메일 등 계정 정보</li>
+                    <li><strong>이용 기록:</strong> 서비스 이용 기록 및 설정</li>
+                    <li><strong>복구 불가:</strong> 삭제된 데이터는 복구할 수 없습니다</li>
+                </ul>
+            </div>
+            
+            <!-- 안내 섹션 -->
+            <div class="info-section">
+                <div class="info-title">
+                    💡 계정 삭제 전 확인사항
+                </div>
+                <div class="info-content">
+                    • 구독 해지만 원하신다면 '구독 관리' 페이지에서 개별 해지 가능합니다<br>
+                    • 일시적으로 서비스를 중단하려면 로그아웃 후 접속하지 않으시면 됩니다<br>
+                    • 계정 삭제 후에도 언제든지 다시 가입할 수 있습니다<br>
+                    • 삭제된 데이터는 개인정보보호법에 따라 완전히 삭제됩니다
+                </div>
+            </div>
+            
+            <!-- 확인 섹션 -->
+            <div class="confirmation-section">
+                <div class="confirmation-title">
+                    계정 삭제를 확인하려면 아래 입력창에 <strong>"계정삭제"</strong>를 정확히 입력하세요:
+                </div>
+                <input type="text" id="confirmation-input" class="confirmation-input" 
+                       placeholder="계정삭제" maxlength="4">
+                <div class="confirmation-text">
+                    정확히 입력하셔야 삭제 버튼이 활성화됩니다.
+                </div>
+            </div>
+            
+            <!-- 액션 버튼 -->
+            <div class="action-buttons">
+                <a href="/" class="cancel-button">
+                    🔙 취소하고 돌아가기
+                </a>
+                <button id="delete-button" class="delete-button" disabled>
+                    🗑️ 계정 완전 삭제
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const confirmationInput = document.getElementById('confirmation-input');
+    const deleteButton = document.getElementById('delete-button');
+    const requiredText = '계정삭제';
+    
+    // 가입일 표시
+    document.addEventListener('DOMContentLoaded', function() {
+        // 실제로는 서버에서 가입일을 전달받아야 함
+        // 현재는 임시로 현재 날짜 표시
+        const joinDateElement = document.getElementById('join-date');
+        joinDateElement.textContent = '정보 없음';
+    });
+    
+    // 확인 텍스트 입력 검증
+    confirmationInput.addEventListener('input', function() {
+        const inputValue = this.value.trim();
+        
+        if (inputValue === requiredText) {
+            this.classList.add('valid');
+            deleteButton.disabled = false;
+            deleteButton.style.background = 'var(--error-color)';
+            deleteButton.style.borderColor = 'var(--error-color)';
+        } else {
+            this.classList.remove('valid');
+            deleteButton.disabled = true;
+            deleteButton.style.background = 'var(--text-muted)';
+            deleteButton.style.borderColor = 'var(--text-muted)';
+        }
+    });
+    
+    // 계정 삭제 처리
+    deleteButton.addEventListener('click', function() {
+        if (this.disabled) return;
+        
+        // 최종 확인
+        const finalConfirm = confirm(
+            '정말로 계정을 삭제하시겠습니까?\n\n' +
+            '이 작업은 되돌릴 수 없으며, 모든 데이터가 영구적으로 삭제됩니다.\n\n' +
+            '확인을 누르시면 계정이 즉시 삭제됩니다.'
+        );
+        
+        if (!finalConfirm) {
+            return;
+        }
+        
+        // 버튼 비활성화 및 로딩 상태
+        this.disabled = true;
+        const originalText = this.innerHTML;
+        this.innerHTML = '⏳ 계정 삭제 중...';
+        
+        // 서버에 삭제 요청
+        fetch('/delete-account', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('계정이 성공적으로 삭제되었습니다. 이용해 주셔서 감사했습니다.', 'success');
+                
+                // 2초 후 홈페이지로 이동
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                throw new Error(data.message || '계정 삭제 중 오류가 발생했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Account deletion error:', error);
+            showAlert('계정 삭제 중 오류가 발생했습니다. 다시 시도해 주세요.', 'error');
+            
+            // 버튼 상태 복원
+            this.disabled = false;
+            this.innerHTML = originalText;
+        });
+    });
+    
+    // 페이지 이탈 경고
+    let isDeleting = false;
+    window.addEventListener('beforeunload', function(e) {
+        if (!isDeleting && confirmationInput.value.trim() === requiredText) {
+            e.preventDefault();
+            e.returnValue = '페이지를 떠나시겠습니까? 입력한 내용이 사라집니다.';
+        }
+    });
+    
+    // ESC 키로 페이지 나가기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (confirm('계정 삭제를 취소하고 홈으로 돌아가시겠습니까?')) {
+                window.location.href = '/';
+            }
+        }
+    });
+</script>
+{% endblock %}

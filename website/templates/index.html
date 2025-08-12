@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block title %}홈 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .main-content {
+        padding: 30px 0;
+    }
+    
+    .welcome-section {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        color: white;
+        padding: 40px;
+        border-radius: var(--radius-xl);
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 20px;
+    }
+    
+    .welcome-stats {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 20px;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .content-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .filter-btn {
+        padding: 6px 12px;
+        background: transparent;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: var(--transition-normal);
+    }
+    
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .notifications-container {
+        min-height: 400px;
+    }
+    
+    .notification-item {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .notification-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-color);
+        transition: var(--transition-normal);
+    }
+    
+    .notification-item:hover::before {
+        background: var(--accent-color);
+        width: 6px;
+    }
+    
+    .notification-new {
+        position: relative;
+    }
+    
+    .notification-new::after {
+        content: 'NEW';
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: var(--accent-color);
+        color: white;
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .load-more-section {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .no-notifications {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+    
+    .no-notifications-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .no-notifications-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .no-notifications-text {
+        margin-bottom: 24px;
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-stats {
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .content-header {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+        }
+        
+        .filter-buttons {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .welcome-section {
+            padding: 30px 20px;
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- 환영 섹션 -->
+    <div class="welcome-section">
+        <h2 class="welcome-title">안녕하세요, {{ session.user.name or session.user.email.split('@')[0] }}님! 👋</h2>
+        <p class="welcome-subtitle">최신 공지사항을 확인하세요</p>
+        
+        <div class="welcome-stats">
+            <div class="stat-item">
+                <span class="stat-number" id="total-notifications">{{ notifications|length }}</span>
+                <span class="stat-label">새 공지사항</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="subscribed-count">-</span>
+                <span class="stat-label">구독 중</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 공지사항 목록 -->
+    <div class="content-header">
+        <h3 class="content-title">
+            📋 최신 공지사항
+        </h3>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">전체</button>
+            <button class="filter-btn" data-filter="학사공지">학사</button>
+            <button class="filter-btn" data-filter="일반공지">일반</button>
+            <button class="filter-btn" data-filter="장학공지">장학</button>
+            <button class="filter-btn" data-filter="취업공지">취업</button>
+        </div>
+    </div>
+    
+    <div class="notifications-container">
+        {% if notifications %}
+            <div class="notification-list" id="notification-list">
+                {% for notification in notifications %}
+                <div class="notification-item" data-category="{{ notification[3] }}" onclick="openNotification('{{ notification[1] }}')">
+                    <div class="notification-title">{{ notification[0] }}</div>
+                    <div class="notification-meta">
+                        <span class="notification-category">{{ notification[3] }}</span>
+                        <span class="notification-date">{{ notification[2][:10] if notification[2] else '날짜 없음' }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="load-more-section">
+                <button class="btn btn-outline" id="load-more-btn" onclick="loadMoreNotifications()">
+                    더 많은 공지사항 보기
+                </button>
+            </div>
+        {% else %}
+            <div class="no-notifications">
+                <div class="no-notifications-icon">📭</div>
+                <h3 class="no-notifications-title">구독한 공지사항이 없습니다</h3>
+                <p class="no-notifications-text">
+                    원하는 공지사항 카테고리를 구독하여<br>
+                    최신 소식을 받아보세요!
+                </p>
+                <a href="{{ url_for('subscribe') }}" class="btn btn-primary">
+                    공지사항 구독하기
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPage = 1;
+    let currentFilter = 'all';
+    let isLoading = false;
+    
+    // 공지사항 클릭 시 새 탭에서 열기
+    function openNotification(url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    
+    // 필터 버튼 이벤트
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 버튼 상태 업데이트
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentFilter = this.dataset.filter;
+            filterNotifications();
+        });
+    });
+    
+    // 공지사항 필터링
+    function filterNotifications() {
+        const notifications = document.querySelectorAll('.notification-item');
+        let visibleCount = 0;
+        
+        notifications.forEach(item => {
+            const category = item.dataset.category;
+            if (currentFilter === 'all' || category === currentFilter) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // 결과가 없을 때 메시지 표시
+        const noResultsMsg = document.querySelector('.no-filter-results');
+        if (visibleCount === 0 && notifications.length > 0) {
+            if (!noResultsMsg) {
+                const msg = document.createElement('div');
+                msg.className = 'no-filter-results no-notifications';
+                msg.innerHTML = `
+                    <div class="no-notifications-icon">🔍</div>
+                    <h3 class="no-notifications-title">'${currentFilter}' 공지사항이 없습니다</h3>
+                    <p class="no-notifications-text">다른 카테고리를 선택해보세요.</p>
+                `;
+                document.querySelector('.notification-list').appendChild(msg);
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    }
+    
+    // 더 많은 공지사항 불러오기
+    async function loadMoreNotifications() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const hideLoading = showLoading(loadMoreBtn);
+        
+        try {
+            currentPage++;
+            const response = await fetch(`/api/notifications?page=${currentPage}&limit=20`);
+            const data = await response.json();
+            
+            if (data.notifications && data.notifications.length > 0) {
+                const notificationList = document.getElementById('notification-list');
+                
+                data.notifications.forEach(notification => {
+                    const item = document.createElement('div');
+                    item.className = 'notification-item';
+                    item.dataset.category = notification.category;
+                    item.onclick = () => openNotification(notification.link);
+                    
+                    item.innerHTML = `
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-meta">
+                            <span class="notification-category">${notification.category}</span>
+                            <span class="notification-date">${notification.timestamp.substring(0, 10)}</span>
+                        </div>
+                    `;
+                    
+                    notificationList.appendChild(item);
+                });
+                
+                // 현재 필터 적용
+                filterNotifications();
+                
+                // 더 이상 데이터가 없으면 버튼 숨기기
+                if (!data.has_more) {
+                    loadMoreBtn.style.display = 'none';
+                }
+                
+                showAlert(`${data.notifications.length}개의 공지사항을 더 불러왔습니다.`);
+            } else {
+                loadMoreBtn.style.display = 'none';
+                showAlert('더 이상 불러올 공지사항이 없습니다.', 'warning');
+            }
+        } catch (error) {
+            console.error('Error loading more notifications:', error);
+            showAlert('공지사항을 불러오는 중 오류가 발생했습니다.', 'error');
+            currentPage--; // 페이지 롤백
+        } finally {
+            hideLoading();
+            isLoading = false;
+        }
+    }
+    
+    // 구독 수 가져오기
+    async function getSubscriptionCount() {
+        try {
+            const response = await fetch('/api/subscription-count');
+            const data = await response.json();
+            document.getElementById('subscribed-count').textContent = data.count || 0;
+        } catch (error) {
+            console.error('Error fetching subscription count:', error);
+        }
+    }
+    
+    // 실시간 업데이트 (30초마다)
+    function startAutoRefresh() {
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/notifications?page=1&limit=5');
+                const data = await response.json();
+                
+                if (data.notifications && data.notifications.length > 0) {
+                    // 새로운 공지사항이 있는지 확인
+                    const firstNotification = document.querySelector('.notification-item');
+                    const latestTitle = data.notifications[0].title;
+                    
+                    if (!firstNotification || firstNotification.querySelector('.notification-title').textContent !== latestTitle) {
+                        // 새 공지사항 알림
+                        showAlert('새로운 공지사항이 있습니다! 페이지를 새로고침하세요.', 'success');
+                    }
+                }
+            } catch (error) {
+                console.error('Auto refresh error:', error);
+            }
+        }, 30000); // 30초마다
+    }
+    
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        getSubscriptionCount();
+        
+        // 공지사항이 있는 경우에만 자동 새로고침 시작
+        if (document.querySelector('.notification-item')) {
+            startAutoRefresh();
+        }
+        
+        // 새 공지사항 표시 (최근 24시간)
+        document.querySelectorAll('.notification-item').forEach(item => {
+            const dateStr = item.querySelector('.notification-date').textContent;
+            const notificationDate = new Date(dateStr);
+            const now = new Date();
+            const hoursDiff = (now - notificationDate) / (1000 * 60 * 60);
+            
+            if (hoursDiff <= 24) {
+                item.classList.add('notification-new');
+            }
+        });
+        
+        // 페이지 로드 애니메이션
+        const items = document.querySelectorAll('.notification-item');
+        items.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            item.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+    
+    // 키보드 단축키
+    document.addEventListener('keydown', function(e) {
+        // S 키로 구독 페이지로 이동
+        if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey) {
+            window.location.href = '/subscribe';
+        }
+        
+        // R 키로 페이지 새로고침
+        if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
+            window.location.reload();
+        }
+    });
+</script>
+{% endblock %}

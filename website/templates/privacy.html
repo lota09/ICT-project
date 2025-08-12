@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}개인정보처리방침 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .policy-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .policy-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border-light);
+    }
+    
+    .policy-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .policy-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .policy-content {
+        line-height: 1.8;
+        color: var(--text-primary);
+    }
+    
+    .policy-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 16px;
+        padding-left: 16px;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .section-content {
+        margin-bottom: 16px;
+        padding-left: 8px;
+    }
+    
+    .subsection {
+        margin-left: 20px;
+        margin-bottom: 12px;
+    }
+    
+    .subsection-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+    
+    .policy-list {
+        padding-left: 20px;
+        margin-bottom: 16px;
+    }
+    
+    .policy-list li {
+        margin-bottom: 8px;
+        color: var(--text-secondary);
+    }
+    
+    .highlight {
+        background-color: rgba(var(--primary-color), 0.1);
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition-normal);
+    }
+    
+    .back-button:hover {
+        color: var(--primary-light);
+    }
+    
+    .effective-date {
+        text-align: right;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        border: 1px solid var(--border-light);
+    }
+    
+    .info-table th,
+    .info-table td {
+        padding: 12px;
+        text-align: left;
+        border: 1px solid var(--border-light);
+    }
+    
+    .info-table th {
+        background-color: var(--background-tertiary);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .info-table td {
+        color: var(--text-secondary);
+    }
+    
+    .warning-box {
+        background-color: rgba(var(--warning-color), 0.1);
+        border: 1px solid var(--warning-color);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin: 16px 0;
+    }
+    
+    .warning-box .warning-icon {
+        color: var(--warning-color);
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .policy-container {
+            margin: 20px;
+            padding: 30px 20px;
+        }
+        
+        .policy-title {
+            font-size: 1.5rem;
+        }
+        
+        .info-table {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="/" class="back-button">
+        ← 홈으로 돌아가기
+    </a>
+    
+    <div class="policy-container">
+        <div class="policy-header">
+            <h1 class="policy-title">개인정보처리방침</h1>
+            <p class="policy-subtitle">숭실대학교 공지사항 알림 서비스</p>
+        </div>
+        
+        <div class="policy-content">
+            <div class="warning-box">
+                <span class="warning-icon">⚠️</span>
+                <strong>중요 안내:</strong> 본 서비스는 숭실대학교와 공식적으로 연관되지 않은 개인 프로젝트입니다. 숭실대학교의 공식 개인정보처리방침과는 별개입니다.
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">1. 개인정보의 처리 목적</h2>
+                <div class="section-content">
+                    <span class="highlight">숭실대학교 공지사항 알림 서비스</span>는 다음의 목적을 위하여 개인정보를 처리합니다:
+                    <ul class="policy-list">
+                        <li><strong>서비스 제공:</strong> 공지사항 구독 서비스 제공, 맞춤형 알림 발송</li>
+                        <li><strong>회원 관리:</strong> 회원제 서비스 이용에 따른 본인확인, 개인식별</li>
+                        <li><strong>서비스 개선:</strong> 서비스 이용현황 파악을 통한 서비스 개선</li>
+                        <li><strong>소통:</strong> 공지사항 전달, 문의사항 처리</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">2. 개인정보의 처리 및 보유 기간</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">① 처리기간</div>
+                        개인정보는 수집·이용에 관한 동의일로부터 서비스 이용 종료시까지 처리·보유합니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">② 보유기간</div>
+                        <ul class="policy-list">
+                            <li>회원탈퇴 요청 시 즉시 삭제</li>
+                            <li>서비스 종료 시 모든 개인정보 즉시 삭제</li>
+                            <li>단, 법령에 의한 보존의무가 있는 경우 해당 기간 동안 보존</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">3. 처리하는 개인정보의 항목</h2>
+                <div class="section-content">
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>수집방법</th>
+                                <th>수집항목</th>
+                                <th>수집목적</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Google OAuth 로그인</td>
+                                <td>• 이메일 주소<br>• 이름<br>• Google 사용자 ID</td>
+                                <td>• 회원식별<br>• 서비스 제공<br>• 공지사항 발송</td>
+                            </tr>
+                            <tr>
+                                <td>서비스 이용과정</td>
+                                <td>• 구독 설정 정보<br>• 서비스 이용 기록</td>
+                                <td>• 맞춤형 서비스 제공<br>• 서비스 개선</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">4. 개인정보의 제3자 제공</h2>
+                <div class="section-content">
+                    원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다. 다만, 아래의 경우에는 예외로 합니다:
+                    <ul class="policy-list">
+                        <li>이용자가 사전에 동의한 경우</li>
+                        <li>법령의 규정에 의하거나, 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">5. 개인정보처리의 위탁</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">① 현재 위탁현황</div>
+                        <table class="info-table">
+                            <thead>
+                                <tr>
+                                    <th>수탁업체</th>
+                                    <th>위탁업무</th>
+                                    <th>개인정보 보유기간</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Google LLC</td>
+                                    <td>OAuth 인증 서비스</td>
+                                    <td>회원탈퇴 또는 위탁계약 종료시까지</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">② 위탁업무 관리</div>
+                        위탁계약 시 개인정보 보호법 제26조에 따라 위탁업무 수행목적 외 개인정보 처리금지 등을 계약서에 명시하고 있습니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">6. 정보주체의 권리·의무 및 행사방법</h2>
+                <div class="section-content">
+                    이용자는 개인정보주체로서 다음과 같은 권리를 행사할 수 있습니다:
+                    <ul class="policy-list">
+                        <li><strong>개인정보 처리정지 요구권:</strong> 서비스 내 구독 해지 기능 이용</li>
+                        <li><strong>개인정보 열람요구권:</strong> 서비스 내 구독 관리 페이지에서 확인 가능</li>
+                        <li><strong>개인정보 정정·삭제요구권:</strong> 구독 설정 변경 또는 회원탈퇴</li>
+                    </ul>
+                    <div class="subsection">
+                        <div class="subsection-title">권리행사 방법</div>
+                        위의 권리 행사는 서비스 내 기능을 통해 직접 할 수 있으며, 추가적인 문의사항이 있을 경우 문의하기 페이지를 통해 연락 주시기 바랍니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">7. 개인정보의 파기</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">① 파기절차</div>
+                        개인정보 보유기간의 경과, 처리목적 달성 등 개인정보가 불필요하게 되었을 때에는 지체없이 해당 개인정보를 파기합니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">② 파기방법</div>
+                        <ul class="policy-list">
+                            <li><strong>전자적 파일 형태:</strong> 기록을 재생할 수 없도록 로우레벨 포맷팅 등의 방법을 이용하여 파기</li>
+                            <li><strong>종이 문서:</strong> 분쇄기로 분쇄하거나 소각하여 파기</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">8. 개인정보의 안전성 확보조치</h2>
+                <div class="section-content">
+                    다음과 같은 기술적·관리적 보호조치를 하고 있습니다:
+                    <ul class="policy-list">
+                        <li><strong>관리적 조치:</strong> 내부관리계획 수립·시행, 정기적 직원 교육</li>
+                        <li><strong>기술적 조치:</strong> 개인정보처리시스템 등의 접근권한 관리, 접근통제시스템 설치, 개인정보의 암호화, 보안프로그램 설치</li>
+                        <li><strong>물리적 조치:</strong> 전산실, 자료보관실 등의 접근통제</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">9. 개인정보보호책임자</h2>
+                <div class="section-content">
+                    개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 정보주체의 불만처리 및 피해구제를 위하여 아래와 같이 개인정보보호책임자를 지정하고 있습니다:
+                    
+                    <table class="info-table">
+                        <tbody>
+                            <tr>
+                                <th>개인정보보호책임자</th>
+                                <td>서비스 관리자</td>
+                            </tr>
+                            <tr>
+                                <th>연락처</th>
+                                <td>문의하기 페이지를 통해 연락</td>
+                            </tr>
+                            <tr>
+                                <th>처리부서</th>
+                                <td>개발팀</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">10. 개인정보 처리방침 변경</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">① 변경사항 공지</div>
+                        이 개인정보처리방침은 시행일자부터 적용되며, 법령 및 방침에 따른 변경내용의 추가, 삭제 및 정정이 있는 경우에는 변경사항의 시행 7일 전부터 공지사항을 통하여 고지할 것입니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">② 중요 변경사항</div>
+                        개인정보의 수집·이용 목적 변경, 제3자 제공, 처리위탁 등 중요한 변경사항이 있을 경우에는 최소 30일 전에 고지하겠습니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">11. 권익침해 구제방법</h2>
+                <div class="section-content">
+                    개인정보주체는 개인정보침해로 인한 구제를 받기 위하여 개인정보보호위원회, 한국인터넷진흥원 개인정보침해신고센터 등에 분쟁해결이나 상담 등을 신청할 수 있습니다:
+                    
+                    <ul class="policy-list">
+                        <li><strong>개인정보보호위원회:</strong> privacy.go.kr (☎ 국번없이 182)</li>
+                        <li><strong>개인정보침해신고센터:</strong> privacy.kisa.or.kr (☎ 국번없이 118)</li>
+                        <li><strong>대검찰청:</strong> www.spo.go.kr (☎ 국번없이 1301)</li>
+                        <li><strong>경찰청:</strong> ecrm.cyber.go.kr (☎ 국번없이 182)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="effective-date">
+                시행일자: 2024년 8월 11일
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

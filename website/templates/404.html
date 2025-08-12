@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}페이지를 찾을 수 없습니다 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 40px 20px;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 120px;
+        margin-bottom: 20px;
+        display: block;
+    }
+    
+    .error-code {
+        font-size: 72px;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        letter-spacing: -2px;
+    }
+    
+    .error-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .error-description {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .error-button {
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .error-button-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .error-button-primary:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+    }
+    
+    .error-button-secondary {
+        background: var(--background-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-light);
+    }
+    
+    .error-button-secondary:hover {
+        background: var(--background-secondary);
+        transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+        .error-container {
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .error-icon {
+            font-size: 80px;
+        }
+        
+        .error-code {
+            font-size: 48px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+        }
+        
+        .error-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .error-button {
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <span class="error-icon">🔍</span>
+    <div class="error-code">404</div>
+    <h1 class="error-title">페이지를 찾을 수 없습니다</h1>
+    <p class="error-description">
+        요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.<br>
+        URL을 확인하시거나 아래 버튼을 통해 다른 페이지로 이동해보세요.
+    </p>
+    
+    <div class="error-actions">
+        <a href="{{ url_for('index') }}" class="error-button error-button-primary">
+            <span>🏠</span>
+            홈으로 돌아가기
+        </a>
+        {% if session.user %}
+        <a href="{{ url_for('subscribe') }}" class="error-button error-button-secondary">
+            <span>📋</span>
+            구독 관리
+        </a>
+        {% endif %}
+        <button onclick="history.back()" class="error-button error-button-secondary">
+            <span>←</span>
+            이전 페이지로
+        </button>
+    </div>
+</div>
+
+<script>
+    // 뒤로가기 버튼 처리
+    if (document.referrer === '' || document.referrer === window.location.href) {
+        // 직접 접근했거나 현재 페이지에서 새로고침한 경우 뒤로가기 버튼 숨기기
+        const backButton = document.querySelector('button[onclick="history.back()"]');
+        if (backButton && (document.referrer === '' || document.referrer === window.location.href)) {
+            backButton.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

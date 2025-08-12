@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}이용약관 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .policy-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .policy-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border-light);
+    }
+    
+    .policy-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .policy-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .policy-content {
+        line-height: 1.8;
+        color: var(--text-primary);
+    }
+    
+    .policy-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 16px;
+        padding-left: 16px;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .section-content {
+        margin-bottom: 16px;
+        padding-left: 8px;
+    }
+    
+    .subsection {
+        margin-left: 20px;
+        margin-bottom: 12px;
+    }
+    
+    .subsection-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+    
+    .policy-list {
+        padding-left: 20px;
+        margin-bottom: 16px;
+    }
+    
+    .policy-list li {
+        margin-bottom: 8px;
+        color: var(--text-secondary);
+    }
+    
+    .highlight {
+        background-color: rgba(var(--primary-color), 0.1);
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition-normal);
+    }
+    
+    .back-button:hover {
+        color: var(--primary-light);
+    }
+    
+    .effective-date {
+        text-align: right;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    @media (max-width: 768px) {
+        .policy-container {
+            margin: 20px;
+            padding: 30px 20px;
+        }
+        
+        .policy-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="/" class="back-button">
+        ← 홈으로 돌아가기
+    </a>
+    
+    <div class="policy-container">
+        <div class="policy-header">
+            <h1 class="policy-title">이용약관</h1>
+            <p class="policy-subtitle">숭실대학교 공지사항 알림 서비스</p>
+        </div>
+        
+        <div class="policy-content">
+            <div class="policy-section">
+                <h2 class="section-title">제1조 (목적)</h2>
+                <div class="section-content">
+                    이 약관은 <span class="highlight">숭실대학교 공지사항 알림 서비스</span>(이하 "서비스")의 이용과 관련하여 서비스 제공자와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제2조 (정의)</h2>
+                <div class="section-content">
+                    이 약관에서 사용하는 용어의 정의는 다음과 같습니다:
+                    <ul class="policy-list">
+                        <li><strong>"서비스"</strong>란 숭실대학교 공지사항을 수집하고 사용자에게 알림을 제공하는 웹 서비스를 의미합니다.</li>
+                        <li><strong>"이용자"</strong>란 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.</li>
+                        <li><strong>"회원"</strong>란 서비스에 개인정보를 제공하여 회원등록을 한 자로서, 서비스의 정보를 지속적으로 제공받을 수 있는 자를 의미합니다.</li>
+                        <li><strong>"공지사항"</strong>이란 숭실대학교에서 공식적으로 발표하는 각종 안내사항을 의미합니다.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제3조 (약관의 효력 및 변경)</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">1. 약관의 효력</div>
+                        이 약관은 서비스 화면에 게시하거나 기타의 방법으로 이용자에게 공지함으로써 효력을 발생합니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">2. 약관의 변경</div>
+                        회사는 필요한 경우 이 약관을 변경할 수 있으며, 변경된 약관은 서비스 내에 공지함으로써 효력을 발생합니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제4조 (서비스의 제공)</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">1. 서비스 내용</div>
+                        <ul class="policy-list">
+                            <li>숭실대학교 각 부서별 공지사항 수집 및 제공</li>
+                            <li>사용자 맞춤형 공지사항 구독 서비스</li>
+                            <li>실시간 공지사항 알림 기능</li>
+                            <li>공지사항 카테고리별 분류 및 검색 서비스</li>
+                        </ul>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">2. 서비스 제공시간</div>
+                        서비스는 연중무휴, 1일 24시간 제공함을 원칙으로 합니다. 단, 시스템 점검 등 필요한 경우 서비스 제공을 일시 중단할 수 있습니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제5조 (회원가입)</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">1. 가입방법</div>
+                        회원가입은 Google OAuth를 통해 진행되며, 이용자가 약관에 동의하고 회원가입을 신청하면 회사가 이를 승낙함으로써 회원가입이 완료됩니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">2. 가입제한</div>
+                        다음 각 호에 해당하는 경우 회원가입을 제한할 수 있습니다:
+                        <ul class="policy-list">
+                            <li>이전에 이 약관에 의하여 회원자격을 상실한 적이 있는 경우</li>
+                            <li>부정한 용도로 서비스를 이용하려는 경우</li>
+                            <li>기타 관련 법령 또는 회사가 정한 이용조건에 위배되는 경우</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제6조 (회원의 의무)</h2>
+                <div class="section-content">
+                    회원은 다음 행위를 하여서는 안 됩니다:
+                    <ul class="policy-list">
+                        <li>신청 또는 변경 시 허위내용의 등록</li>
+                        <li>다른 이용자의 개인정보 수집</li>
+                        <li>서비스의 정상적인 운영을 방해하는 행위</li>
+                        <li>공서양속에 위반되는 내용의 정보, 문장, 도형, 음향, 동영상을 전송, 게시, 전자우편 또는 기타의 방법으로 타인에게 유포하는 행위</li>
+                        <li>관련 법령에 위배되는 행위</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제7조 (개인정보보호)</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">1. 수집정보</div>
+                        서비스는 Google OAuth를 통해 최소한의 개인정보(이메일, 이름)만을 수집합니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">2. 이용목적</div>
+                        수집된 개인정보는 서비스 제공, 구독 관리, 공지사항 발송 목적으로만 사용됩니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">3. 보안</div>
+                        회사는 이용자의 개인정보를 안전하게 관리하며, 관련 법령에 따라 적절한 보안조치를 취합니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제8조 (서비스 이용제한)</h2>
+                <div class="section-content">
+                    회사는 다음 각 호의 경우에 서비스 이용을 제한할 수 있습니다:
+                    <ul class="policy-list">
+                        <li>이 약관을 위배한 경우</li>
+                        <li>서비스의 정상적인 이용에 방해가 되는 행위를 하는 경우</li>
+                        <li>관련 법령 또는 공서양속에 위배되는 행위를 하는 경우</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제9조 (면책조항)</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">1. 서비스 중단</div>
+                        회사는 천재지변 또는 이에 준하는 불가항력으로 인하여 서비스를 제공할 수 없는 경우에는 서비스 제공에 관한 책임이 면제됩니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">2. 정보의 정확성</div>
+                        본 서비스는 숭실대학교 공식 공지사항을 수집하여 제공하나, 정보의 정확성이나 완전성을 보장하지는 않습니다. 정확한 정보는 숭실대학교 공식 웹사이트에서 확인하시기 바랍니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="policy-section">
+                <h2 class="section-title">제10조 (분쟁해결)</h2>
+                <div class="section-content">
+                    <div class="subsection">
+                        <div class="subsection-title">1. 준거법</div>
+                        이 약관과 서비스 이용에 관한 분쟁에 대해서는 대한민국 법을 적용합니다.
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">2. 관할법원</div>
+                        서비스 이용으로 발생한 분쟁에 대해 소송이 제기될 경우 회사의 소재지를 관할하는 법원을 관할 법원으로 합니다.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="effective-date">
+                시행일자: 2024년 8월 11일
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

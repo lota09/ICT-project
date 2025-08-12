@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}접근 권한이 없습니다 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 40px 20px;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 120px;
+        margin-bottom: 20px;
+        display: block;
+    }
+    
+    .error-code {
+        font-size: 72px;
+        font-weight: bold;
+        color: var(--warning-color);
+        margin-bottom: 10px;
+        letter-spacing: -2px;
+    }
+    
+    .error-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .error-description {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .error-button {
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .error-button-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .error-button-primary:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+    }
+    
+    .error-button-secondary {
+        background: var(--background-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-light);
+    }
+    
+    .error-button-secondary:hover {
+        background: var(--background-secondary);
+        transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+        .error-container {
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .error-icon {
+            font-size: 80px;
+        }
+        
+        .error-code {
+            font-size: 48px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+        }
+        
+        .error-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .error-button {
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <span class="error-icon">🚫</span>
+    <div class="error-code">403</div>
+    <h1 class="error-title">접근 권한이 없습니다</h1>
+    <p class="error-description">
+        이 페이지에 접근할 권한이 없습니다.<br>
+        {% if not session.user %}
+        로그인이 필요하거나
+        {% endif %}
+        다른 권한이 필요할 수 있습니다.
+    </p>
+    
+    <div class="error-actions">
+        {% if not session.user %}
+        <a href="{{ url_for('login') }}" class="error-button error-button-primary">
+            <span>🔑</span>
+            로그인하기
+        </a>
+        {% endif %}
+        <a href="{{ url_for('index') }}" class="error-button error-button-secondary">
+            <span>🏠</span>
+            홈으로 돌아가기
+        </a>
+        <button onclick="history.back()" class="error-button error-button-secondary">
+            <span>←</span>
+            이전 페이지로
+        </button>
+    </div>
+</div>
+
+<script>
+    // 뒤로가기 버튼 처리
+    if (document.referrer === '' || document.referrer === window.location.href) {
+        const backButton = document.querySelector('button[onclick="history.back()"]');
+        if (backButton) {
+            backButton.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

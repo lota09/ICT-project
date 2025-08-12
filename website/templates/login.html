@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - 숭실대학교 공지사항{% endblock %}
+
+{% block styles %}
+<style>
+    .login-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+    }
+    
+    .login-card {
+        background: var(--background-primary);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    
+    .login-header {
+        margin-bottom: 40px;
+    }
+    
+    .login-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .login-subtitle {
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+    
+    .login-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        display: block;
+    }
+    
+    .google-login-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 16px 24px;
+        background: #4285F4;
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition-normal);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .google-login-btn:hover {
+        background: #3367D6;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .google-icon {
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .google-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .login-features {
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .features-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+    }
+    
+    .features-list {
+        list-style: none;
+        text-align: left;
+    }
+    
+    .features-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .feature-icon {
+        width: 20px;
+        height: 20px;
+        background: var(--success-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+    
+    .login-footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-light);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    
+    @media (max-width: 480px) {
+        .login-card {
+            padding: 30px 20px;
+            margin: 0 16px;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+        }
+        
+        .login-icon {
+            font-size: 3rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <span class="login-icon">🏫</span>
+            <h1 class="login-title">숭실대 공지사항</h1>
+            <p class="login-subtitle">실시간 공지사항을 받아보세요</p>
+        </div>
+        
+        <a href="{{ url_for('google_login') }}" class="google-login-btn">
+            <div class="google-icon">
+                <svg viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+            </div>
+            Google로 로그인
+        </a>
+        
+        <div class="login-features">
+            <h3 class="features-title">✨ 주요 기능</h3>
+            <ul class="features-list">
+                <li>
+                    <span class="feature-icon">✓</span>
+                    실시간 공지사항 알림
+                </li>
+                <li>
+                    <span class="feature-icon">✓</span>
+                    원하는 카테고리만 구독
+                </li>
+                <li>
+                    <span class="feature-icon">✓</span>
+                    모바일 최적화 인터페이스
+                </li>
+                <li>
+                    <span class="feature-icon">✓</span>
+                    안전한 Google 로그인
+                </li>
+            </ul>
+        </div>
+        
+        <div class="login-footer">
+            <p>로그인하면 <strong>이용약관</strong> 및 <strong>개인정보처리방침</strong>에 동의하는 것으로 간주됩니다.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 로그인 버튼 클릭 시 로딩 상태 표시
+    document.querySelector('.google-login-btn').addEventListener('click', function(e) {
+        const hideLoading = showLoading(this);
+        
+        // 실패 시 로딩 상태 해제 (3초 후)
+        setTimeout(() => {
+            loginCard.style.opacity = '1';
+            loginCard.style.transform = 'translateY(0)';
+        }, 100);
+    });
+</script>
+{% endblock %}
