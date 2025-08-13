@@ -66,7 +66,7 @@ class DB:
         return conn
     
     def save_program_to_db(self, notification_id, program: Dict[str, Any]):
-        """프로그램 정보를 SQLite 데이터베이스에 저장"""
+        """프로그램 정보를 SQLite 데이터베이스에 저장(id, link, crawl_timestamp, title, crawl_seq, raw_html, ai_json_data)"""
         cursor = self.conn.cursor()
         
         self._create_notification_data_table(notification_id)
@@ -88,7 +88,7 @@ class DB:
             return {"code" : 1}
         except:
             return {"code" : -1}
-    
+
     def _create_notification_data_table(self, notification_id, cursor=None):
         cursor = self.conn.cursor()
         
@@ -100,24 +100,23 @@ class DB:
                 title TEXT NOT NULL,
                 crawl_seq INTEGER,
                 raw_html TEXT,
-                ai_json_data TEXT,
-                sent INTEGER DEFAULT 0
+                ai_json_data TEXT
             )
         ''')
     
-    def get_notification_ids(self) -> List[int]:
-        """모든 공지사항 ID 목록 조회"""
+    def get_notification_id_url(self) -> List[int]:
+        """모든 공지사항 ID, url 목록 조회"""
         cursor = self.conn.cursor()
         
         try:
-            cursor.execute('SELECT id FROM notificationList')
-            return [row[0] for row in cursor.fetchall()]
+            cursor.execute('SELECT id, url FROM notificationList')
+            return cursor.fetchall()
         except Exception as e:
             self.main_logger.error(f"공지사항 ID 목록 조회 실패: {e}")
             return []
     
     def get_unsent_notifications(self, notification_id: int, from_time: str = None, to_time: str = None) -> List[Dict[str, Any]]:
-        """아직 전송되지 않은 공지사항 데이터 조회"""
+        """지정된 시간 범위 이후에 추가된 공지사항 데이터 조회 (email_log 기준)"""
         cursor = self.conn.cursor()
         
         try:
@@ -126,16 +125,29 @@ class DB:
             if not cursor.fetchone():
                 return []
             
+            # 마지막 전송 시간 조회
+            if not from_time:
+                cursor.execute('''
+                    SELECT MAX(sent_timestamp) 
+                    FROM email_log 
+                    WHERE notification_id = ? AND status = 'success'
+                ''', (notification_id,))
+                result = cursor.fetchone()
+                last_sent_time = result[0] if result and result[0] else '1970-01-01 00:00:00'
+            else:
+                last_sent_time = from_time
+            
+            # 마지막 전송 이후 추가된 데이터 조회
             query = f'''
                 SELECT id, link, title, crawl_timestamp, ai_json_data
                 FROM notification_data_{notification_id}
-                WHERE sent = 0
+                WHERE crawl_timestamp > ?
             '''
-            params = []
+            params = [last_sent_time]
             
-            if from_time and to_time:
-                query += ' AND crawl_timestamp BETWEEN ? AND ?'
-                params.extend([from_time, to_time])
+            if to_time:
+                query += ' AND crawl_timestamp <= ?'
+                params.append(to_time)
             
             query += ' ORDER BY crawl_timestamp DESC'
             
@@ -157,26 +169,6 @@ class DB:
         except Exception as e:
             self.main_logger.error(f"미전송 공지사항 조회 실패: {e}")
             return []
-    
-    def mark_as_sent(self, notification_id: int, data_ids: List[int]) -> Dict[str, Any]:
-        """공지사항 데이터를 전송 완료로 표시"""
-        cursor = self.conn.cursor()
-        
-        try:
-            if not data_ids:
-                return {"code": 1, "message": "표시할 데이터가 없습니다"}
-            
-            placeholders = ','.join('?' * len(data_ids))
-            cursor.execute(f'''
-                UPDATE notification_data_{notification_id}
-                SET sent = 1
-                WHERE id IN ({placeholders})
-            ''', data_ids)
-            
-            return {"code": 1, "message": f"{len(data_ids)}개 데이터 전송 완료 표시"}
-        except Exception as e:
-            self.main_logger.error(f"전송 완료 표시 실패: {e}")
-            return {"code": -1, "message": str(e)}
     
     def log_email_send(self, notification_id: int, recipient_count: int, status: str = 'success', error_message: str = None) -> Dict[str, Any]:
         """이메일 전송 기록 저장"""

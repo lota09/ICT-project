@@ -13,7 +13,19 @@ class DB:
         self.conn = self._config_data_based(self.db_path)
     
     def __del__(self):
-        self.conn.close()
+        if hasattr(self, 'conn') and self.conn:
+            self.conn.close()
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if hasattr(self, 'conn') and self.conn:
+            if exc_type is not None:
+                self.conn.rollback()
+            else:
+                self.conn.commit()
+            self.conn.close()
     
     def _setup_logger(self, name):
         logger = logging.getLogger(name)
@@ -31,7 +43,7 @@ class DB:
     def _config_data_based(self, path: str = "./notice.db"):
         """SQLite 데이터베이스 연결"""
         self.db_path = Path(path)
-        conn = sqlite3.connect(self.db_path, autocommit= True)
+        conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
         # main.notificationList 테이블
@@ -84,8 +96,7 @@ class DB:
                 title TEXT NOT NULL,
                 crawl_seq INTEGER,
                 raw_html TEXT,
-                ai_json_data TEXT,
-                sent INTEGER DEFAULT 1
+                ai_json_data TEXT
             )
         ''')
     
@@ -264,7 +275,7 @@ class DB:
         try:
             # 버튼 방식 공지사항
             cursor.execute('''
-                SELECT id, title, url, display_type 
+                SELECT id, title, url, display_type , description
                 FROM notificationList 
                 WHERE display_type = "button" 
                 ORDER BY id

@@ -427,9 +427,9 @@
                                 {{ get_category_icon(notification[1]) }} {{ notification[1] }}
                             </h3>
                             <p class="card-description">
-                                {{ get_category_description(notification[1]) }}
+                                {{ notification[4] or '관련 공지사항을 받아보세요' }}
                             </p>
-                            <div class="card-url">{{ notification[2] }}</div>
+                            <!-- <div class="card-url">{{ notification[2] }}</div> -->
                             <div class="card-stats">
                                 <div class="stat-item">
                                     <span>📊</span>
@@ -780,18 +780,18 @@
         }
     });
     
-    // 페이지 이탈 전 확인
-    window.addEventListener('beforeunload', function(e) {
-        const currentIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
-                               .map(cb => cb.value);
-        const hasChanges = JSON.stringify(currentIds.sort()) !== JSON.stringify(originalSubscriptions.sort());
-        
-        if (hasChanges) {
-            e.preventDefault();
-            e.returnValue = '저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠습니까?';
-            return e.returnValue;
-        }
-    });
+    // 페이지 이탈 전 확인 (비활성화됨)
+    // window.addEventListener('beforeunload', function(e) {
+    //     const currentIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+    //                            .map(cb => cb.value);
+    //     const hasChanges = JSON.stringify(currentIds.sort()) !== JSON.stringify(originalSubscriptions.sort());
+    //     
+    //     if (hasChanges) {
+    //         e.preventDefault();
+    //         e.returnValue = '저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠습니까?';
+    //         return e.returnValue;
+    //     }
+    // });
 </script>
 
 {% endblock %}

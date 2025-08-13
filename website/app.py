@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 import os
+from dotenv import load_dotenv
 import sys
 from datetime import datetime
 from authlib.integrations.flask_client import OAuth
@@ -10,7 +11,18 @@ import csv
 from dbWeb import DB
 
 # DB 파일 경로 설정
-DB_PATH = "../db/notice.db"
+relative_path = "../db/notice.db"
+
+current_file_path = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_file_path)
+DB_PATH = os.path.abspath(os.path.join(current_dir, relative_path))
+load_dotenv(os.path.abspath(os.path.join(current_dir, ".env")))
+print(DB_PATH)
+
+# DB 연결 관리 함수
+def get_db():
+    """새로운 DB 연결을 생성하고 사용 후 자동으로 닫힘"""
+    return DB(path=DB_PATH)
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-here')
@@ -69,9 +81,6 @@ def get_weekly_avg(notification_id):
     return avg_data.get(notification_id, '2-3')
 
 
-
-
-
 @app.route('/')
 def index():
     if 'user' not in session:
@@ -79,15 +88,14 @@ def index():
     
     try:
         # 새로운 DB 클래스 사용
-        db = DB(path=DB_PATH)
         user_id = session['user']['sub']
         
-        # 새로운 구독 시스템으로 구독 ID 조회
-        subscribed_ids = db.get_user_subscription_ids(user_id)
-        
-        
-        # 새로운 DB 클래스를 사용하여 공지사항 데이터 가져오기
-        notifications = db.get_user_notifications(user_id, limit=20)
+        with DB(path=DB_PATH) as db:
+            # 새로운 구독 시스템으로 구독 ID 조회
+            subscribed_ids = db.get_user_subscription_ids(user_id)
+            
+            # 새로운 DB 클래스를 사용하여 공지사항 데이터 가져오기
+            notifications = db.get_user_notifications(user_id, limit=20)
         
         return render_template('index.html', notifications=notifications)
     
@@ -116,8 +124,10 @@ def google_callback():
         session['user'] = user_info
         
         # 새로운 DB 클래스로 사용자 정보 저장
-        db = DB(path=DB_PATH)
-        db.register_user(user_info['sub'], user_info['email'])
+        with DB(path=DB_PATH) as db:
+            print(user_info['sub'], user_info['email'])
+            result = db.register_user(user_info['sub'], user_info['email'])
+            print(f"User registration result: {result}")  # 디버깅용
         
         return redirect(url_for('index'))
     
@@ -128,7 +138,7 @@ def google_callback():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    return redirect(url_for('login'))
+    return redirect('/')
 
 @app.route('/subscribe')
 def subscribe():
@@ -137,11 +147,11 @@ def subscribe():
     
     try:
         # 새로운 DB 클래스로 공지사항 데이터 가져오기
-        db = DB(path=DB_PATH)
         user_id = session['user']['sub']
         
-        button_notifications, dropdown_data = db.get_notification_categories()
-        subscribed_ids = db.get_user_subscription_ids(user_id)
+        with DB(path=DB_PATH) as db:
+            button_notifications, dropdown_data = db.get_notification_categories()
+            subscribed_ids = db.get_user_subscription_ids(user_id)
         
         # 문자열 형태로 변환 (템플릿 호환성)
         subscribed_ids = [str(id) for id in subscribed_ids]
@@ -165,12 +175,17 @@ def update_subscription():
         abort(401)
     
     try:
-        selected_ids = request.json.get('subscriptions', [])
+        selected_ids = request.json.get('selected_notifications', [])
+        print(selected_ids)
         user_id = session['user']['sub']
         
+        print(f"Updating subscriptions for user {user_id}: {selected_ids}")  # 디버깅용
+        
         # 새로운 DB 클래스 사용
-        db = DB(path=DB_PATH)
-        result = db.update_user_subscriptions(user_id, selected_ids)
+        with DB(path=DB_PATH) as db:
+            result = db.update_user_subscriptions(user_id, selected_ids)
+        
+        print(f"Update result: {result}")  # 디버깅용
         
         if result['code'] == 1:
             return jsonify({
@@ -199,12 +214,13 @@ def api_notifications():
     
     try:
         # 새로운 DB 클래스 사용
-        db = DB(path=DB_PATH)
         user_id = session['user']['sub']
-        subscribed_ids = db.get_user_subscription_ids(user_id)
         
-        # DB 클래스를 사용하여 공지사항 데이터 가져오기
-        notifications = db.get_user_notifications(user_id, limit=limit, offset=offset)
+        with DB(path=DB_PATH) as db:
+            subscribed_ids = db.get_user_subscription_ids(user_id)
+            
+            # DB 클래스를 사용하여 공지사항 데이터 가져오기
+            notifications = db.get_user_notifications(user_id, limit=limit, offset=offset)
         
         return jsonify({
             'notifications': notifications,
@@ -223,11 +239,11 @@ def api_subscription_count():
     
     try:
         # 새로운 DB 클래스 사용
-        db = DB(path=DB_PATH)
         user_id = session['user']['sub']
-        subscribed_ids = db.get_user_subscription_ids(user_id)
-        count = len(subscribed_ids)
         
+        with DB(path=DB_PATH) as db:
+            subscribed_ids = db.get_user_subscription_ids(user_id)
+            count = len(subscribed_ids)
         
         return jsonify({'count': count})
         
@@ -307,8 +323,8 @@ def delete_account():
             user_email = session['user']['email']
             
             # 새로운 DB 클래스로 사용자 삭제
-            db = DB(path=DB_PATH)
-            result = db.delete_user(user_id)
+            with DB(path=DB_PATH) as db:
+                result = db.delete_user(user_id)
             
             if result['code'] != 1:
                 return jsonify({'success': False, 'message': result['message']})
@@ -368,7 +384,8 @@ if __name__ == '__main__':
     try:
         # 새로운 DB 클래스로 초기화
         print("Initializing database with new DB class...")
-        db = DB(path=DB_PATH)
+        with DB(path=DB_PATH) as db:
+            pass  # 초기화만 확인
         
         print("Database initialization completed!")
         print("Server address: http://localhost:5000")
