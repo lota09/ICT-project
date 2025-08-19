@@ -7,7 +7,7 @@ import json
 class DB:
 
     def __init__(self, path: str = "./notice.db"):
-        """SQLite 데이터베이스 초기화 (Crawler & Email 전용)"""
+        """SQLite database initialization (Crawler & Email)"""
         self.main_logger = self._setup_logger(__name__)
         
         self.db_path = Path(path)
@@ -25,17 +25,17 @@ class DB:
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             logger.setLevel(logging.DEBUG)
-            logger.info("새 로거 생성 및 설정 완료")
+            logger.info("New logger created and configured")
         
         return logger
     
     def _config_data_based(self, path: str = "./db/notice.db"):
-        """SQLite 데이터베이스 연결"""
+        """SQLite database connection"""
         self.db_path = Path(path)
         conn = sqlite3.connect(self.db_path, autocommit= True)
         cursor = conn.cursor()
         
-        # main.notificationList 테이블
+        # main.notificationList table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS notificationList (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,11 +46,12 @@ class DB:
                 college TEXT DEFAULT NULL,
                 department TEXT DEFAULT NULL,
                 major TEXT DEFAULT NULL,
-                description TEXT DEFAULT NULL
+                description TEXT DEFAULT NULL,
+                link_selector TEXT DEFAULT NULL
             )
         ''')
         
-        # 이메일 전송 기록 테이블
+        # Email sending log table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS email_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,22 +67,19 @@ class DB:
         return conn
     
     def save_program_to_db(self, notification_id, program: Dict[str, Any]):
-        """프로그램 정보를 SQLite 데이터베이스에 저장(id, link, crawl_timestamp, title, crawl_seq, raw_html, ai_json_data)"""
+        """Save program info to SQLite database"""
         cursor = self.conn.cursor()
         
         self._create_notification_data_table(notification_id)
         try:
-            # 프로그램 정보 삽입
             cursor.execute(f'''
                     INSERT INTO notification_data_{notification_id} 
-                    (id, link, crawl_timestamp, title, crawl_seq, raw_html, ai_json_data) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (link, crawl_timestamp, title, raw_html, ai_json_data) 
+                    VALUES (?, ?, ?, ?, ?)
             ''', (
-                program.get('id'),
                 program.get('program_link'),
                 program.get('crawl_timestamp', 'null'),
                 program.get('title', 'null'),
-                program.get('crawl_seq', 1),
                 program.get('raw_html', 'null'),
                 json.dumps(program.get('ai_json_data', 'null'), ensure_ascii=False, indent=2) if isinstance(program.get('ai_json_data', 'null'), dict) else str(program.get('ai_json_data', 'null'))
             ))
@@ -94,38 +92,37 @@ class DB:
         
         cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS notification_data_{notification_id} (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 link TEXT NOT NULL,
                 crawl_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 title TEXT NOT NULL,
-                crawl_seq INTEGER,
                 raw_html TEXT,
                 ai_json_data TEXT
             )
         ''')
     
     def get_notification_id_url(self) -> List[int]:
-        """모든 공지사항 ID, url 목록 조회"""
+        """Get all notification ID, url list"""
         cursor = self.conn.cursor()
         
         try:
             cursor.execute('SELECT id, url FROM notificationList')
             return cursor.fetchall()
         except Exception as e:
-            self.main_logger.error(f"공지사항 ID 목록 조회 실패: {e}")
+            self.main_logger.error(f"Get notification ID list failed: {e}")
             return []
     
     def get_unsent_notifications(self, notification_id: int, from_time: str = None, to_time: str = None) -> List[Dict[str, Any]]:
-        """지정된 시간 범위 이후에 추가된 공지사항 데이터 조회 (email_log 기준)"""
+        """Get notification data added after specified time range (based on email_log)"""
         cursor = self.conn.cursor()
         
         try:
-            # 테이블 존재 확인
+            # Check table existence
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (f'notification_data_{notification_id}',))
             if not cursor.fetchone():
                 return []
             
-            # 마지막 전송 시간 조회
+            # Get last send time
             if not from_time:
                 cursor.execute('''
                     SELECT MAX(sent_timestamp) 
@@ -136,8 +133,6 @@ class DB:
                 last_sent_time = result[0] if result and result[0] else '1970-01-01 00:00:00'
             else:
                 last_sent_time = from_time
-            
-            # 마지막 전송 이후 추가된 데이터 조회
             query = f'''
                 SELECT id, link, title, crawl_timestamp, ai_json_data
                 FROM notification_data_{notification_id}
@@ -167,11 +162,11 @@ class DB:
             return notifications
             
         except Exception as e:
-            self.main_logger.error(f"미전송 공지사항 조회 실패: {e}")
+            self.main_logger.error(f"Get unsent notifications failed: {e}")
             return []
     
     def log_email_send(self, notification_id: int, recipient_count: int, status: str = 'success', error_message: str = None) -> Dict[str, Any]:
-        """이메일 전송 기록 저장"""
+        """Save email sending log"""
         cursor = self.conn.cursor()
         
         try:
@@ -180,17 +175,16 @@ class DB:
                 VALUES (?, ?, ?, ?)
             ''', (notification_id, recipient_count, status, error_message))
             
-            return {"code": 1, "message": "이메일 전송 기록 저장 성공"}
+            return {"code": 1, "message": "Email send log saved successfully"}
         except Exception as e:
-            self.main_logger.error(f"이메일 전송 기록 저장 실패: {e}")
+            self.main_logger.error(f"Save email send log failed: {e}")
             return {"code": -1, "message": str(e)}
     
     def get_email_stats(self, days: int = 7) -> Dict[str, Any]:
-        """이메일 전송 통계 조회"""
+        """Email sending statistics"""
         cursor = self.conn.cursor()
         
         try:
-            # 최근 N일 내 전송 통계
             cursor.execute('''
                 SELECT 
                     COUNT(*) as total_sends,
@@ -212,7 +206,7 @@ class DB:
             }
             
         except Exception as e:
-            self.main_logger.error(f"이메일 통계 조회 실패: {e}")
+            self.main_logger.error(f"Email stats query failed: {e}")
             return {
                 'total_sends': 0,
                 'total_recipients': 0,
@@ -220,3 +214,45 @@ class DB:
                 'failed_sends': 0,
                 'success_rate': 0
             }
+    
+    def get_existing_links(self, notification_id: int) -> set:
+        """Get existing crawled links from DB"""
+        cursor = self.conn.cursor()
+        
+        try:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
+                          (f'notification_data_{notification_id}',))
+            if not cursor.fetchone():
+                return set()
+            
+            cursor.execute(f'SELECT link FROM notification_data_{notification_id}')
+            existing_links = cursor.fetchall()
+            return {link[0] for link in existing_links}
+            
+        except Exception as e:
+            self.main_logger.error(f"Get existing links failed (notification_id: {notification_id}): {e}")
+            return set()
+    
+    def get_notification_info(self, notification_id: int) -> Optional[Dict[str, Any]]:
+        """Get notification info from notificationList"""
+        cursor = self.conn.cursor()
+        
+        try:
+            cursor.execute('''
+                SELECT title, url, link_selector 
+                FROM notificationList 
+                WHERE id = ?
+            ''', (notification_id,))
+            
+            result = cursor.fetchone()
+            if result:
+                return {
+                    'title': result[0],
+                    'url': result[1], 
+                    'link_selector': result[2]
+                }
+            return None
+            
+        except Exception as e:
+            self.main_logger.error(f"Get notification info failed (notification_id: {notification_id}): {e}")
+            return None

@@ -57,7 +57,8 @@ class DB:
                 college TEXT DEFAULT NULL,
                 department TEXT DEFAULT NULL,
                 major TEXT DEFAULT NULL,
-                description TEXT DEFAULT NULL
+                description TEXT DEFAULT NULL,
+                link_selector TEXT DEFAULT NULL
             )
         ''')
         
@@ -90,11 +91,10 @@ class DB:
         
         cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS notification_data_{notification_id} (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 link TEXT NOT NULL,
                 crawl_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 title TEXT NOT NULL,
-                crawl_seq INTEGER,
                 raw_html TEXT,
                 ai_json_data TEXT
             )

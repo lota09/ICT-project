@@ -1,7 +1,8 @@
 __pycache__
 test
 old
-init
 
+.venv
 .env
 *.log
+*.db
