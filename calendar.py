@@ -101,8 +101,8 @@ def build_gcal_link(item: Dict[str, Any], tzid: str="Asia/Seoul") -> str:
         ("text",   enc(title)),
         ("dates",  enc(dates, keep_slash=True)),  # 슬래시는 보존
         ("details",enc(details)),
-        # ("location", enc(item.get("location") or "")),  # 있으면 사용
         ("ctz",    enc(tzid)),
     ]
     qs = "&".join(f"{k}={v}" for k, v in query if v)
-    return f"https://calendar.google.com/calendar/render?{qs}"
+    gcal_url= f"https://calendar.google.com/calendar/render?{qs}"
+    return gcal_url
