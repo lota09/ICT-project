@@ -5,7 +5,7 @@ from pydantic import BaseModel, ValidationError
 # schedule 배열 안에 들어갈 객체의 설계도
 class ScheduleItem(BaseModel):
     description: str
-    period: str
+    date: str
     location: Optional[str] = None # location은 없을 수도 있으므로 Optional로 지정
 
 # 최종 JSON 전체의 설계도

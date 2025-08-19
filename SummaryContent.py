@@ -20,12 +20,12 @@ Prioritize the most critical information by placing the `title` and `summary` fi
 ### JSON Format Example ###
 {{
     "title": "(A concise summary of the notice's main topic, ending as a noun phrase)",
-    "summary": "(A one-sentence overview of the program's purpose or content)",
+    "summary": "(A concise summary of the notice's content in sentence form)",
     "schedule": [
         {{
-            "description": "(The type of event, e.g., 'Application Period', 'Registration for Seniors')",
-            "period": "(The corresponding date or period, e.g., 'YYYY.MM.DD', 'YYYY.MM.DD HH:MM ~ HH:MM')"
-            "location": "(A place where the schedule takes place)"
+            "description": "(The name of the key date, e.g., '신청 마감일', '서류 제출 마감')",
+            "date": "(The corresponding date, e.g., 'YYYY.MM.DD', 'YYYY.MM.DD HH:MM')"
+            "location": "(A place where the event on the specified date takes place)"
         }}
     ],
     "target": "(Who the notice is for)",
@@ -105,7 +105,15 @@ class GeminiSummarizer:
             print(f"요약 중 오류 발생: {e}")
             print(f"Gemini가 보낸 원본 응답:\n---\n{response.text}\n---")
             return "요약에 실패했습니다."
+def run_summarizer_with_ocr(summarizer: GeminiSummarizer, main_content: str, ocr_content: str = "") -> str:
 
+    # 텍스트를 합침
+    full_content = main_content
+    if ocr_content and ocr_content.strip():
+        full_content += f"\n\n--- 이미지에서 추출된 텍스트 ---\n{ocr_content}"
+    
+    # 준비된 전체 텍스트로 원래의 summarize 함수를 호출
+    return summarizer.summarize(full_content)
 
 # 테스트 코드
 '''
