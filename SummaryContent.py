@@ -11,8 +11,9 @@ You are a highly competent assistant responsible for accurately extracting key i
 Analyze the following academic notice. Extract the essential information and return it **strictly in JSON format**.
 - The JSON keys must be in English and snake_case.
 - All JSON values must be written in Korean.
-- Omit any introductory pleasantries or redundant phrases.
-- If a specific field or piece of information is not mentioned in the text, **omit its corresponding key from the JSON object entirely**.
+- If a specific field or piece of information is not mentioned in the text, omit its corresponding key from the JSON object entirely.
+- In the `schedule` field, find and extract only crucial single dates like deadlines (마감일).
+- If the text provides a period (e.g., '신청 기간: YYYY.MM.DD ~ YYYY.MM.DD'), extract ONLY the end date and set the `description` to '신청 마감'.
 
 Prioritize the most critical information by placing the `title` and `summary` first in the JSON structure.
 
@@ -20,17 +21,17 @@ Prioritize the most critical information by placing the `title` and `summary` fi
 ### JSON Format Example ###
 {{
     "title": "(A concise summary of the notice's main topic, ending as a noun phrase)",
-    "summary": "(A concise summary of the notice's content in sentence form)",
+    "summary": "(A detailed summary of the notice. It MUST include the main purpose, key activities, and expected benefits for participants.)",
     "schedule": [
         {{
-            "description": "(The name of the key date, e.g., '신청 마감일', '서류 제출 마감')",
-            "date": "(The corresponding date, e.g., 'YYYY.MM.DD', 'YYYY.MM.DD HH:MM')"
+            "description": "(The type of deadline, e.g., '신청 마감', '서류 제출 마감'. MUST be a single event.)",
+            "date": "(The corresponding single date ONLY. e.g., 'YYYY.MM.DD', 'YYYY.MM.DD HH:MM'. NEVER include date ranges.)",
             "location": "(A place where the event on the specified date takes place)"
         }}
     ],
     "target": "(Who the notice is for)",
-    "application_method": "(How to apply, including links or locations)",
-    "important_notes": "(Other essential information students must know)"
+    "application_method": "(A full phrase describing the method, e.g., 'OOO 홈페이지에서 온라인 신청', 'XX관 YY실로 방문 제출')",
+    "important_notes": "(Key details like capacity, selection method, benefits, or contact info. Key details are separated by a slash.e.g., '정원: OO명 / 선발 방식: 서류 심사 / 혜택: 활동비 지원 / 문의: OOO팀 (02-123-4567)'))"
 }}
 ---
 ### Text to Summarize ###
@@ -105,29 +106,38 @@ class GeminiSummarizer:
             print(f"요약 중 오류 발생: {e}")
             print(f"Gemini가 보낸 원본 응답:\n---\n{response.text}\n---")
             return "요약에 실패했습니다."
-def run_summarizer_with_ocr(summarizer: GeminiSummarizer, main_content: str, ocr_content: str = "") -> str:
+    def preprocess_summarize(self, main_content: str, ocr_content: str = "") -> str:
 
-    # 텍스트를 합침
-    full_content = main_content
-    if ocr_content and ocr_content.strip():
-        full_content += f"\n\n--- 이미지에서 추출된 텍스트 ---\n{ocr_content}"
-    
-    # 준비된 전체 텍스트로 원래의 summarize 함수를 호출
-    return summarizer.summarize(full_content)
+        # 텍스트를 합침
+        full_content = main_content
+        if ocr_content and ocr_content.strip():
+            full_content += f"\n\n--- 이미지에서 추출된 텍스트 ---\n{ocr_content}"
+        
+        # 준비된 전체 텍스트로 원래의 summarize 함수를 호출
+        return self.summarize(full_content)
 
 # 테스트 코드
-'''
+def load_test_content(file_path: str) -> str:
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"경고: 파일을 찾을 수 없습니다 - {file_path}")
+        return ""
+
 if __name__ == '__main__':
+    load_dotenv()
     summarizer = GeminiSummarizer()
 
     # 요약할 텍스트
-    example_content = """
-
-    """
+    example_content = load_test_content("test_content/notice01_main.txt")
+    image_content=load_test_content("test_content/notice01_ocr.txt")
 
     # 요약 실행
-    summary_result = summarizer.summarize(example_content)
+    summary_result = summarizer.preprocess_summarize(
+        main_content=example_content, ocr_content=image_content
+    )
 
     print("\n--- 요약 결과 ---")
     print(summary_result)
-'''
+
