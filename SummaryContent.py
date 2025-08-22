@@ -106,6 +106,8 @@ class GeminiSummarizer:
             print(f"요약 중 오류 발생: {e}")
             print(f"Gemini가 보낸 원본 응답:\n---\n{response.text}\n---")
             return "요약에 실패했습니다."
+        
+'''
     def preprocess_summarize(self, main_content: str, ocr_content: str = "") -> str:
 
         # 텍스트를 합침
@@ -130,8 +132,8 @@ if __name__ == '__main__':
     summarizer = GeminiSummarizer()
 
     # 요약할 텍스트
-    example_content = load_test_content("test_content/notice01_main.txt")
-    image_content=load_test_content("test_content/notice01_ocr.txt")
+    example_content = load_test_content("test_content/notice02_main.txt")
+    image_content=load_test_content("test_content/notice02_ocr.txt")
 
     # 요약 실행
     summary_result = summarizer.preprocess_summarize(
@@ -140,4 +142,4 @@ if __name__ == '__main__':
 
     print("\n--- 요약 결과 ---")
     print(summary_result)
-
+'''
