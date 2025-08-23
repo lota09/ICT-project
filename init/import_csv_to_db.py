@@ -3,7 +3,7 @@ import csv
 import os
 from pathlib import Path
 
-def import_csv_to_db(csv_path="notificationList.csv", db_path="db/notice.db"):
+def import_csv_to_db(csv_path="test/notificationList.csv", db_path="db/notice.db"):
     """CSV 파일을 SQLite 데이터베이스로 가져오기"""
     
     # DB 경로 설정
@@ -30,7 +30,8 @@ def import_csv_to_db(csv_path="notificationList.csv", db_path="db/notice.db"):
             department TEXT DEFAULT NULL,
             major TEXT DEFAULT NULL,
             description TEXT DEFAULT NULL,
-            link_selector TEXT DEFAULT NULL
+            link_selector TEXT DEFAULT NULL,
+            content_selector TEXT DEFAULT NULL
         )
     ''')
     
@@ -109,8 +110,8 @@ def import_csv_to_db(csv_path="notificationList.csv", db_path="db/notice.db"):
                 # CSV의 id는 무시하고 AUTOINCREMENT 사용
                 cursor.execute('''
                     INSERT INTO notificationList 
-                    (title, url, login, display_type, college, department, major, description, link_selector)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (title, url, login, display_type, college, department, major, description, link_selector, content_selector)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     row['title'],
                     row['url'],
@@ -120,7 +121,8 @@ def import_csv_to_db(csv_path="notificationList.csv", db_path="db/notice.db"):
                     row['department'] if row['department'] else None,
                     row['major'] if row['major'] else None,
                     row['description'] if row['description'] else None,
-                    row['link_selector'] if row['link_selector'] else None
+                    row['link_selector'] if row['link_selector'] else None,
+                    row['content_selector'] if row['content_selector'] else None
                 ))
                 insert_count += 1
             except Exception as e:

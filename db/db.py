@@ -47,7 +47,8 @@ class DB:
                 department TEXT DEFAULT NULL,
                 major TEXT DEFAULT NULL,
                 description TEXT DEFAULT NULL,
-                link_selector TEXT DEFAULT NULL
+                link_selector TEXT DEFAULT NULL,
+                content_selector TEXT DEFAULT NULL
             )
         ''')
         
@@ -239,7 +240,7 @@ class DB:
         
         try:
             cursor.execute('''
-                SELECT title, url, link_selector 
+                SELECT title, url, link_selector, content_selector 
                 FROM notificationList 
                 WHERE id = ?
             ''', (notification_id,))
@@ -249,10 +250,26 @@ class DB:
                 return {
                     'title': result[0],
                     'url': result[1], 
-                    'link_selector': result[2]
+                    'link_selector': result[2],
+                    'content_selector': result[3]
                 }
             return None
             
         except Exception as e:
             self.main_logger.error(f"Get notification info failed (notification_id: {notification_id}): {e}")
             return None
+
+    def get_all_ids(self) -> List[int]:
+        """Return all notification IDs"""
+        cursor = self.conn.cursor()
+        
+        try:
+            # Get all notification IDs
+            cursor.execute('SELECT id FROM notificationList ORDER BY id')
+            notification_ids = [row[0] for row in cursor.fetchall()]
+            
+            return notification_ids
+            
+        except Exception as e:
+            self.main_logger.error(f"Get all notification IDs failed: {e}")
+            return []

@@ -58,7 +58,8 @@ class DB:
                 department TEXT DEFAULT NULL,
                 major TEXT DEFAULT NULL,
                 description TEXT DEFAULT NULL,
-                link_selector TEXT DEFAULT NULL
+                link_selector TEXT DEFAULT NULL,
+                content_selector TEXT DEFAULT NULL
             )
         ''')
         
