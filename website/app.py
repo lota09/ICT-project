@@ -8,7 +8,10 @@ import json
 import csv
 
 # 웹사이트 전용 DB 모듈 import
-from dbWeb import DB
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from db.db import WebsiteDB as DB
 
 # DB 파일 경로 설정
 relative_path = "../db/notice.db"

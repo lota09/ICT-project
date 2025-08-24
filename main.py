@@ -4,8 +4,15 @@ import json
 import time
 import logging
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+if not logger.handlers:
+    handler = logging.FileHandler('app.log', encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.WARNING)
+    logger.info("New logger created and configured-main")
 
 def fetch_single_content(fetcher, notification):
     """단일 notification의 content를 가져오는 함수"""
@@ -29,7 +36,7 @@ def fetch_single_content(fetcher, notification):
 def process_ai_summary(content_data):
     """AI 요약 처리 함수 (나중에 구현)"""
     # TODO: AI 요약 API 호출 구현
-    # AI에게 전달할 데이터: content_data['content'] (HTML), content_data['url'] (이미지 처리용)
+    # AI에게 전달할 데이터:  ['content'] (HTML), content_data['url'] (이미지 처리용)
     content_data['ai_summary'] = None  # 나중에 구현
     return content_data
 
@@ -97,8 +104,10 @@ def main():
         "notifications": final_results
     }
     
+    # database.save_notifications(final_results)
+    
     with open("notifications_with_content.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
+        json.dump(final_results, f, ensure_ascii=False, indent=2)
     
     logger.info(f"완료! {len(final_results)}개 알림이 저장되었습니다.")
 

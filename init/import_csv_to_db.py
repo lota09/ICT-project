@@ -3,7 +3,7 @@ import csv
 import os
 from pathlib import Path
 
-def import_csv_to_db(csv_path="test/notificationList.csv", db_path="db/notice.db"):
+def import_csv_to_db(csv_path="../test/notificationList.csv", db_path="../db/notice.db"):
     """CSV 파일을 SQLite 데이터베이스로 가져오기"""
     
     # DB 경로 설정
