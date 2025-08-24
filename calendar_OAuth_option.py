@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import re
 import time
 import base64
 import hashlib
@@ -41,6 +42,137 @@ def _clean_date(x: Any) -> Optional[str]:
         return (x.date() if isinstance(x, datetime) else x).isoformat()
     return None
 
+def _parse_date_range(text: str) -> Optional[Tuple[str, str]]:
+    """
+    기간 텍스트에서 시작일과 종료일을 추출.
+    예: "2024.12.01 ~ 2024.12.31", "2024-12-01 ~ 2024-12-31"
+    """
+    if not text:
+        return None
+    
+    # 다양한 구분자 패턴
+    patterns = [
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s*[~∼~]\s*(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})',
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s*[-~]\s*(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})',
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s*부터\s*(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s*까지',
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s*-\s*(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})',
+        # 한국어 기간 패턴들
+        r'(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)\s*[-~]\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)',
+        r'(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)부터\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)까지',
+        r'(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)\s*[-~]\s*(\d{1,2}월\s*\d{1,2}일)',
+        r'(\d{1,2}월\s*\d{1,2}일)\s*[-~]\s*(\d{1,2}월\s*\d{1,2}일)',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            start_date = _normalize_date_string(match.group(1))
+            end_date = _normalize_date_string(match.group(2))
+            if start_date and end_date:
+                return (start_date, end_date)
+    
+    return None
+
+def _parse_datetime(text: str) -> Optional[Tuple[str, str]]:
+    """
+    날짜와 시간이 포함된 텍스트에서 날짜와 시간을 추출.
+    예: "2024.12.31 18:00", "2024-12-31 18:00", "2025.09.23.(수) 17:00"
+    """
+    if not text:
+        return None
+    
+    # 날짜 + 시간 패턴 (한국어 요일 포함)
+    patterns = [
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2}\.\([월화수목금토일]\))\s+(\d{1,2}:\d{2})',  # 2025.09.23.(수) 17:00
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2}\s*\([월화수목금토일]\))\s+(\d{1,2}:\d{2})',   # 2025-09-23 (수) 17:00
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s+(\d{1,2}:\d{2})',  # 2024.12.31 18:00
+        r'(\d{4}[\.\-/]\d{1,2}[\.\-/]\d{1,2})\s+(\d{1,2}:\d{2}:\d{2})',  # 2024.12.31 18:00:00
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            date_str = _normalize_date_string(match.group(1))
+            time_str = match.group(2)
+            if date_str:
+                return (date_str, time_str)
+    
+    return None
+
+def _normalize_date_string(date_str: str) -> Optional[str]:
+    """다양한 날짜 형식을 'YYYY-MM-DD'로 정규화."""
+    if not date_str:
+        return None
+    
+    # 점, 슬래시, 하이픈으로 구분된 날짜를 정규화
+    date_str = date_str.strip()
+    
+    # 한국어 요일이 포함된 패턴들 처리
+    korean_weekday_patterns = [
+        r'(\d{4})\.(\d{1,2})\.(\d{1,2})\.\([월화수목금토일]\)',  # 2025.09.23.(수)
+        r'(\d{4})-(\d{1,2})-(\d{1,2})\s*\([월화수목금토일]\)',   # 2025-09-23 (수)
+        r'(\d{4})/(\d{1,2})/(\d{1,2})\s*\([월화수목금토일]\)',   # 2025/09/23 (수)
+    ]
+    
+    for pattern in korean_weekday_patterns:
+        match = re.match(pattern, date_str)
+        if match:
+            y, mo, d = match.groups()
+            return f"{y}-{mo.zfill(2)}-{d.zfill(2)}"
+    
+    # 시간이 포함된 패턴들 처리
+    time_patterns = [
+        r'(\d{4})\.(\d{1,2})\.(\d{1,2})\.\([월화수목금토일]\)\s+\d{1,2}:\d{1,2}',  # 2025.09.23.(수) 17:00
+        r'(\d{4})-(\d{1,2})-(\d{1,2})\s*\([월화수목금토일]\)\s+\d{1,2}:\d{1,2}',   # 2025-09-23 (수) 17:00
+        r'(\d{4})/(\d{1,2})/(\d{1,2})\s*\([월화수목금토일]\)\s+\d{1,2}:\d{1,2}',   # 2025/09/23 (수) 17:00
+        r'(\d{4})-(\d{1,2})-(\d{1,2})\s+\d{1,2}:\d{1,2}',  # 2024-12-31 14:30
+        r'(\d{4})\.(\d{1,2})\.(\d{1,2})\s+\d{1,2}:\d{1,2}', # 2024.12.31 14:30
+        r'(\d{4})/(\d{1,2})/(\d{1,2})\s+\d{1,2}:\d{1,2}',   # 2024/12/31 14:30
+    ]
+    
+    for pattern in time_patterns:
+        match = re.match(pattern, date_str)
+        if match:
+            y, mo, d = match.groups()
+            return f"{y}-{mo.zfill(2)}-{d.zfill(2)}"
+    
+    # 2024.12.31 -> 2024-12-31
+    if '.' in date_str:
+        parts = date_str.split('.')
+        if len(parts) == 3:
+            return f"{parts[0]}-{parts[1].zfill(2)}-{parts[2].zfill(2)}"
+    
+    # 2024/12/31 -> 2024-12-31
+    if '/' in date_str:
+        parts = date_str.split('/')
+        if len(parts) == 3:
+            return f"{parts[0]}-{parts[1].zfill(2)}-{parts[2].zfill(2)}"
+    
+    # 2024-12-31 -> 그대로 반환
+    if '-' in date_str:
+        parts = date_str.split('-')
+        if len(parts) == 3:
+            return f"{parts[0]}-{parts[1].zfill(2)}-{parts[2].zfill(2)}"
+    
+    # 한국어 날짜 형식 처리
+    korean_patterns = [
+        r'(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일',  # 2024년 12월 31일
+        r'(\d{1,2})월\s*(\d{1,2})일',  # 12월 31일 (현재 년도 사용)
+    ]
+    
+    for pattern in korean_patterns:
+        match = re.match(pattern, date_str)
+        if match:
+            if len(match.groups()) == 3:  # 년도 포함
+                y, mo, d = match.groups()
+                return f"{y}-{mo.zfill(2)}-{d.zfill(2)}"
+            elif len(match.groups()) == 2:  # 년도 없음
+                mo, d = match.groups()
+                current_year = datetime.now().year
+                return f"{current_year}-{mo.zfill(2)}-{d.zfill(2)}"
+    
+    return None
+
 def _to_dt(x: Any) -> Optional[datetime]:
     """문자열 날짜를 datetime(KST)로 변환."""
     if isinstance(x, datetime):
@@ -78,27 +210,24 @@ def _ics_uid(item: Dict[str, Any]) -> str:
 def _ics_event(item: Dict[str, Any], tzid: str = "Asia/Seoul") -> str:
     """
     VEVENT 1개를 문자열로 생성.
-    - deadline 있으면 종일 이벤트
-    - deadline 없고 posted_at 있으면 09:00~10:00 이벤트
-    - 둘 다 없으면 ""(스킵)
+    - deadline: 단일 날짜, 기간, 또는 날짜+시간 처리
+    - 없으면 ""(스킵)
     """
     title = (item.get("title") or "").strip() or "제목 없음"
     link = (item.get("link") or "").strip()
     source = (item.get("source") or "").strip()
     cat = (item.get("category") or "").strip()
     posted = _clean_date(item.get("posted_at"))
-    deadline = _clean_date(item.get("deadline"))
+    deadline_raw = item.get("deadline")
 
     # 일정 정보가 전혀 없으면 스킵
-    if not deadline and not posted:
+    if not deadline_raw and not posted:
         return ""
 
     # 설명 구성
     desc_lines: List[str] = []
     if cat:
         desc_lines.append(f"[카테고리] {cat}")
-    if posted:
-        desc_lines.append(f"[게시일] {posted}")
     if link:
         desc_lines.append(link)
     if item.get("summary"):
@@ -117,20 +246,48 @@ def _ics_event(item: Dict[str, Any], tzid: str = "Asia/Seoul") -> str:
         f"SUMMARY:{_ics_escape(title)}",
     ]
 
-    if deadline:
-        # 종일 이벤트: DTEND는 다음날
-        y, m, d = map(int, deadline.split("-"))
+    # deadline 처리: 기간, 날짜+시간, 단일 날짜 순서로 확인
+    if deadline_raw:
+        deadline_str = str(deadline_raw).strip()
+        
+        # 1. 기간인지 확인 (예: "2024.12.01 ~ 2024.12.31")
+        date_range = _parse_date_range(deadline_str)
+        if date_range:
+            start_date, end_date = date_range
+            start_s = start_date.replace("-", "")
+            end_s = end_date.replace("-", "")
+            lines.append(f"DTSTART;VALUE=DATE:{start_s}")
+            lines.append(f"DTEND;VALUE=DATE:{end_s}")
+        
+        # 2. 날짜+시간인지 확인 (예: "2024.12.31 18:00")
+        elif _parse_datetime(deadline_str):
+            date_part, time_part = _parse_datetime(deadline_str)
+            datetime_str = f"{date_part}T{time_part}:00"
+            start_dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S")
+            end_dt = start_dt + timedelta(hours=1)
+            
+            start_s = start_dt.strftime("%Y%m%dT%H%M%S")
+            end_s = end_dt.strftime("%Y%m%dT%H%M%S")
+            lines.append(f"DTSTART:{start_s}")
+            lines.append(f"DTEND:{end_s}")
+        
+        # 3. 단일 날짜인지 확인
+        else:
+            deadline = _clean_date(deadline_raw)
+            if deadline:
+                y, m, d = map(int, deadline.split("-"))
+                start_s = f"{y:04d}{m:02d}{d:02d}"
+                end_s = (date(y, m, d) + timedelta(days=1)).strftime("%Y%m%d")
+                lines.append(f"DTSTART;VALUE=DATE:{start_s}")
+                lines.append(f"DTEND;VALUE=DATE:{end_s}")
+    
+    # deadline이 없으면 posted_at 사용
+    elif posted:
+        y, m, d = map(int, posted.split("-"))
         start_s = f"{y:04d}{m:02d}{d:02d}"
         end_s = (date(y, m, d) + timedelta(days=1)).strftime("%Y%m%d")
         lines.append(f"DTSTART;VALUE=DATE:{start_s}")
         lines.append(f"DTEND;VALUE=DATE:{end_s}")
-    else:
-        # posted_at 기반 09:00~10:00
-        dt = _to_dt(posted) or datetime.now(KST)
-        start_dt = dt.replace(hour=9, minute=0, second=0, microsecond=0)
-        end_dt = start_dt + timedelta(hours=1)
-        lines.append(f"DTSTART;TZID={tzid}:{start_dt.strftime('%Y%m%dT%H%M%S')}")
-        lines.append(f"DTEND;TZID={tzid}:{end_dt.strftime('%Y%m%dT%H%M%S')}")
 
     if description:
         lines.append(f"DESCRIPTION:{description}")
@@ -186,7 +343,7 @@ def write_ics(
     ics = items_to_ics(items, calendar_name, tzid, include_without_deadline)
     pathlib.Path(path).write_text(ics, encoding="utf-8", newline="\r\n")
     return path
-  
+
 # Google Calendar API (OAuth 업서트)
 def _ensure_service():
     """OAuth 토큰 확보 후 Calendar API 서비스 핸들 반환."""
@@ -194,21 +351,36 @@ def _ensure_service():
     from google_auth_oauthlib.flow import InstalledAppFlow
     from google.auth.transport.requests import Request
     from googleapiclient.discovery import build
+    from google.auth.exceptions import RefreshError
 
     creds = None
     if os.path.exists(TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, GSCOPES)
+        try:
+            creds = Credentials.from_authorized_user_file(TOKEN_PATH, GSCOPES)
+        except Exception as e:
+            print(f"Error loading token file: {e}")
+            # 토큰 파일이 손상된 경우 삭제
+            os.remove(TOKEN_PATH)
+            creds = None
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except RefreshError as e:
+                print(f"Token refresh failed: {e}")
+                # 토큰 갱신 실패 시 파일 삭제하고 새로 인증
+                if os.path.exists(TOKEN_PATH):
+                    os.remove(TOKEN_PATH)
+                creds = None
+        
+        if not creds:
             if not os.path.exists(CRED_PATH):
                 raise FileNotFoundError(f"Google OAuth credentials not found: {CRED_PATH}")
             flow = InstalledAppFlow.from_client_secrets_file(CRED_PATH, GSCOPES)
             creds = flow.run_local_server(port=0)  # 최초 1회 브라우저 인증
-        with open(TOKEN_PATH, "w") as f:
-            f.write(creds.to_json())
+            with open(TOKEN_PATH, "w") as f:
+                f.write(creds.to_json())
 
     return build("calendar", "v3", credentials=creds, cache_discovery=False)
 
@@ -219,7 +391,7 @@ def _build_event_body(
 ) -> Optional[Dict[str, Any]]:
     """
     Google Calendar 이벤트 바디 생성.
-    - deadline 종일 이벤트, 아니면 posted_at 기반 09:00~10:00
+    - deadline: 단일 날짜, 기간, 또는 날짜+시간 처리
     - 날짜가 전혀 없으면 None 반환(스킵)
     """
     title = (item.get("title") or "").strip() or "제목 없음"
@@ -227,17 +399,15 @@ def _build_event_body(
     source = (item.get("source") or "").strip()
     cat = (item.get("category") or "").strip()
     posted = _clean_date(item.get("posted_at"))
-    deadline = _clean_date(item.get("deadline"))
+    deadline_raw = item.get("deadline")
     ext_id = _ext_id(item)
 
-    if not deadline and not posted:
+    if not deadline_raw and not posted:
         return None
 
     desc_lines: List[str] = []
     if cat:
         desc_lines.append(f"[카테고리] {cat}")
-    if posted:
-        desc_lines.append(f"[게시일] {posted}")
     if link:
         desc_lines.append(link)
     if item.get("summary"):
@@ -245,16 +415,54 @@ def _build_event_body(
         desc_lines.append(item["summary"])
     description = "\n".join(desc_lines) if desc_lines else None
 
-    if deadline:
-        y, m, d = map(int, deadline.split("-"))
+    # deadline 처리: 기간, 날짜+시간, 단일 날짜 순서로 확인
+    start = None
+    end = None
+    
+    if deadline_raw:
+        deadline_str = str(deadline_raw).strip()
+        
+        # 1. 기간인지 확인 (예: "2024.12.01 ~ 2024.12.31")
+        date_range = _parse_date_range(deadline_str)
+        if date_range:
+            start_date, end_date = date_range
+            start = {"date": start_date, "timeZone": tzid}
+            end = {"date": end_date, "timeZone": tzid}
+        
+        # 2. 날짜+시간인지 확인 (예: "2024.12.31 18:00")
+        elif _parse_datetime(deadline_str):
+            date_part, time_part = _parse_datetime(deadline_str)
+            datetime_str = f"{date_part}T{time_part}:00"
+            start = {"dateTime": datetime_str, "timeZone": tzid}
+            # 기본 1시간 이벤트
+            end_dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S") + timedelta(hours=1)
+            end = {"dateTime": end_dt.strftime("%Y-%m-%dT%H:%M:%S"), "timeZone": tzid}
+        
+        # 3. 단일 날짜인지 확인
+        else:
+            deadline = _clean_date(deadline_raw)
+            if deadline:
+                y, m, d = map(int, deadline.split("-"))
+                start = {"date": f"{y:04d}-{m:02d}-{d:02d}", "timeZone": tzid}
+                end = {"date": (date(y, m, d) + timedelta(days=1)).isoformat(), "timeZone": tzid}
+    
+    # deadline이 없으면 posted_at 사용
+    if not start and posted:
+        y, m, d = map(int, posted.split("-"))
         start = {"date": f"{y:04d}-{m:02d}-{d:02d}", "timeZone": tzid}
         end = {"date": (date(y, m, d) + timedelta(days=1)).isoformat(), "timeZone": tzid}
-    else:
-        dt = _to_dt(posted) or datetime.now(KST)
-        start_dt = dt.replace(hour=9, minute=0, second=0, microsecond=0)
-        end_dt = start_dt + timedelta(hours=1)
-        start = {"dateTime": start_dt.isoformat(), "timeZone": tzid}
-        end = {"dateTime": end_dt.isoformat(), "timeZone": tzid}
+
+    if not start:
+        return None
+    
+    # deadline이 없으면 posted_at 사용
+    if not start and posted:
+        y, m, d = map(int, posted.split("-"))
+        start = {"date": f"{y:04d}-{m:02d}-{d:02d}", "timeZone": tzid}
+        end = {"date": (date(y, m, d) + timedelta(days=1)).isoformat(), "timeZone": tzid}
+
+    if not start:
+        return None
 
     if reminders is None:
         reminders = DEFAULT_REMINDERS
@@ -292,8 +500,14 @@ def upsert_to_gcal(
     - 날짜 전혀 없는 항목은 스킵
     """
     from googleapiclient.errors import HttpError
+    from google.auth.exceptions import RefreshError
 
-    service = _ensure_service()
+    try:
+        service = _ensure_service()
+    except Exception as e:
+        print(f"Failed to initialize Google Calendar service: {e}")
+        raise Exception(f"Google Calendar 인증 실패: {str(e)}")
+
     stats = {"created": 0, "updated": 0, "skipped": 0}
 
     for it in items:
@@ -324,8 +538,13 @@ def upsert_to_gcal(
                     stats["created"] += 1
 
             time.sleep(0.1)  # QPS 조절
-        except HttpError:
+        except HttpError as e:
+            print(f"HTTP error for item {it.get('title', 'Unknown')}: {e}")
             stats["skipped"] += 1
-        except Exception:
+        except RefreshError as e:
+            print(f"Token refresh error: {e}")
+            raise Exception("Google Calendar 토큰이 만료되었습니다. 다시 인증해주세요.")
+        except Exception as e:
+            print(f"Unexpected error for item {it.get('title', 'Unknown')}: {e}")
             stats["skipped"] += 1
     return stats
