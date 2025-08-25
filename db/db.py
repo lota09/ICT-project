@@ -442,7 +442,7 @@ class EmailDB(BaseDB):
                 'success_rate': 0
             }
 
-    def get_notification_subscribers(self, notification_id: int) -> List[str]:
+    def get_subscribers_email(self, notification_id: int) -> List[str]:
         """특정 공지사항의 구독자 목록 조회"""
         cursor = self.conn.cursor()
         
@@ -465,5 +465,3 @@ class EmailDB(BaseDB):
         except Exception as e:
             self.main_logger.error(f"구독자 목록 조회 실패: {e}")
             return []
-    
-    
