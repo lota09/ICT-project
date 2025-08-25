@@ -4,7 +4,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from urllib.parse import urljoin, urlparse
-import logging
 import re
 import html
 import urllib3
@@ -13,10 +12,13 @@ from pathlib import Path
 from typing import List, Dict, Optional, Any
 import sys
 import os
+import hashlib
+from urllib.parse import unquote
 
 # Add parent directory to path to import db module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db.db import CrawlerDB
+from utils.logging_config import setup_logger
 
 # SSL warning disable
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -24,7 +26,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class NotificationFetcher:
     def __init__(self, db_path="db/notice.db", delay=1.0):
         """Crawling and duplicate check class"""
-        self.main_logger = self._setup_logger(__name__)
+        self.main_logger = setup_logger()
         
         self.db = CrawlerDB(db_path)
         self.session = requests.Session()
@@ -41,19 +43,6 @@ class NotificationFetcher:
         if hasattr(self, 'db'):
             del self.db
     
-    def _setup_logger(self, name):
-        logger = logging.getLogger(name)
-        
-        if not logger.handlers:
-            handler = logging.FileHandler('app.log', encoding='utf-8')
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.DEBUG)
-            logger.info("New logger created and configured-fetch")
-
-        return logger
-    
     def _scrape_url(self, url, title, link_selector):
         """Extract links and text from single URL (based on csv_link_scraper.py)"""
         try:
@@ -67,7 +56,7 @@ class NotificationFetcher:
             if url.startswith("https://lawyer.ssu.ac.kr/web/05/notice_list.do"):
                 try:
                     news_items = soup.select('#main > section.contents > div.board-list-style.board-course > div.board-list-body > div')
-                    for item in news_items[:10]:
+                    for item in news_items:
                         if item and item.get('id'):
                             id = item.get('id')
                             full_url = f"https://lawyer.ssu.ac.kr/web/05/notice_view.do?post={id}"
@@ -88,7 +77,7 @@ class NotificationFetcher:
                 # materials.ssu.ac.kr specific handling
                 try:
                     news_items = soup.select('.news-list ul li')
-                    for item in news_items[:10]:
+                    for item in news_items:
                         link_element = item.select_one('a')
                         if link_element and link_element.get('href'):
                             href = link_element.get('href')
@@ -111,7 +100,7 @@ class NotificationFetcher:
                       
             elif url == "http://media.ssu.ac.kr/sub.php?code=XxH00AXY&category=1":
                 found_links = soup.select(link_selector)
-                for link in found_links[:10]:
+                for link in found_links:
                     href = link.get('onclick')
                     if href:
                         match = re.search(r"viewData\('(\d+)'\)", href)
@@ -128,7 +117,7 @@ class NotificationFetcher:
                 try:
                     json_data = response.json()
                     if 'data_list' in json_data:
-                        for item in json_data['data_list'][:10]:
+                        for item in json_data['data_list']:
                             title_text = item.get('Title', '').strip()
                             notice_index = item.get('NoticeIndex', '')
                             if title_text and notice_index:
@@ -161,18 +150,20 @@ class NotificationFetcher:
                 if link_selector and link_selector.strip():
                     found_links = soup.select(link_selector)
                     if found_links:
-                        for link in found_links[:10]:
+                        for link in found_links:
                             href = link.get('href')
                             text = link.get_text(strip=True)
                             
                             if href and text and len(text) > 3:
                                 full_url = urljoin(url, href)
+                                #세션 id 제거
+                                full_url = full_url.split("PHPSESSID=")[0]
                                 links.append({
                                     'text': text,
                                     'url': full_url
                                 })
             
-            return links[:10]
+            return links
             
         except Exception as e:
             self.main_logger.error(f"Error scraping {url}: {str(e)}")
@@ -260,7 +251,7 @@ class NotificationFetcher:
                 except:
                     content = ""
                     
-            elif url.startswith("https://api.mediamba.ssu.ac.kr/v1/board") or url.startswith("https://mediamba.ssu.ac.kr/board/notice"):
+            elif url.startswith("https://api.mediamba.ssu.ac.kr/v1/board"):
                 # 미디어경영학과 API 처리
                 if url.startswith("https://mediamba.ssu.ac.kr/board/notice"):
                     # Convert frontend URL to API URL
@@ -306,10 +297,18 @@ class NotificationFetcher:
                 else:
                     content = ""
             
+            # 이미지 정보 추출
+            media_info = []
+            if content:
+                soup = BeautifulSoup(content, 'html.parser')
+                url1 = url if not url.startswith('https://api.mediamba.ssu.ac.kr/v1/board') else None
+                media_info = self._extract_media(soup, url1)
+
             return {
                 'title': title,
                 'url': url,
                 'content': self.clean_html_content(content),
+                'image': media_info,
                 'fetch_success': True
             }
             
@@ -325,10 +324,10 @@ class NotificationFetcher:
 
     def clean_html_content(self, html_content: str) -> str:
         """
-        HTML 내용을 단축하는 함수
-        - 불필요한 속성만 제거 (style, class, id 등)
-        - HTML 구조 태그와 중요한 속성들은 모두 보존
-        - 이미지, 다운로드 링크, href 속성 보존
+        HTML 내용을 정리하는 함수
+        - 주석 제거
+        - 스크립트와 스타일 태그 제거
+        - 모든 HTML 속성 제거 (태그만 보존)
         """
         if not html_content or html_content.strip() == "":
             return html_content
@@ -336,42 +335,98 @@ class NotificationFetcher:
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # 스크립트와 스타일 태그만 제거
+            # 주석 제거
+            from bs4 import Comment
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+            
+            # 스크립트와 스타일 태그 제거
             for tag in soup(['script', 'style']):
                 tag.decompose()
             
-            # 모든 태그에서 스타일링 관련 속성만 제거
+            # 모든 태그에서 모든 속성 제거
             for tag in soup.find_all():
-                if tag.attrs:
-                    # 제거할 속성 목록 (스타일링 관련)
-                    attrs_to_remove = []
-                    for attr in tag.attrs:
-                        if attr in ['style', 'class', 'id', 'data-toggle', 'data-target', 'data-saferedirecturl']:
-                            attrs_to_remove.append(attr)
-                    
-                    # 속성 제거
-                    for attr in attrs_to_remove:
-                        del tag.attrs[attr]
+                tag.attrs = {}
             
             # 연속된 공백 줄바꿈 정리
             cleaned_html = str(soup)
-            cleaned_html = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_html)  # 3개 이상 연속 줄바꿈을 2개로
+            cleaned_html = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_html)
             
             return cleaned_html.strip()
             
         except Exception as e:
             self.main_logger.warning(f"HTML cleaning failed: {e}")
             return html_content
-    
+
+    def _get_image_base_url(self, img_url: str) -> str:
+        """이미지 URL에서 베이스 부분 추출 (크기 정보 제거)"""
+        url = re.sub(r'-\d+x\d+(?=\.[^.]*$)', '', img_url)
+        url = re.sub(r'_\d+(?=\.[^.]*$)', '', url)
+        return url
+
+    def _extract_image_dimensions(self, img_url: str) -> tuple:
+        """이미지 URL에서 크기 정보 추출"""
+        match = re.search(r'-(\d+)x(\d+)(?=\.[^.]*$)', img_url)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        return 0, 0
+
+    def _extract_media(self, soup: BeautifulSoup, base_url: str = None) -> list:
+        """HTML에서 이미지 추출 (URL과 filename만 반환)"""
+        media_info = []
+        
+        all_image_urls = set()
+        
+        for img in soup.find_all('img', src=True):
+            img_url = img['src']
+            if base_url and not img_url.startswith('http'):
+                img_url = urljoin(base_url, img_url)
+            all_image_urls.add(img_url)
+        
+        for img in soup.find_all('img', srcset=True):
+            srcset = img['srcset']
+            for src_info in srcset.split(','):
+                img_url = src_info.strip().split(' ')[0]
+                if base_url and not img_url.startswith('http'):
+                    img_url = urljoin(base_url, img_url)
+                all_image_urls.add(img_url)
+        
+        image_groups = {}
+        for img_url in all_image_urls:
+            base_url_key = self._get_image_base_url(img_url)
+            
+            if base_url_key not in image_groups:
+                image_groups[base_url_key] = []
+            image_groups[base_url_key].append(img_url)
+        
+        for base_url_key, urls in image_groups.items():
+            largest_url = max(urls, key=lambda url: self._extract_image_dimensions(url)[0] * self._extract_image_dimensions(url)[1])
+            
+            parsed_url = urlparse(largest_url)
+            filename = unquote(os.path.basename(parsed_url.path))
+            
+            if not filename or '.' not in filename:
+                url_hash = hashlib.md5(largest_url.encode()).hexdigest()[:8]
+                filename = f"image_{url_hash}.jpg"
+            
+            filename = re.sub(r'[^\w\-_\.]', '_', filename)
+            
+            media_info.append({
+                'url': largest_url,
+                'filename': filename
+            })
+        
+        return media_info
+
     def save_new_notification(self, notification_data: Dict[str, Any]) -> Dict[str, Any]:
         """Save new notification to DB"""
         try:
             program_data = {
-                'program_link': notification_data['link'],
+                'program_link': notification_data['url'],
                 'title': notification_data['title'],
-                'crawl_timestamp': None,  # Auto generated by DB
-                'raw_html': None,
-                'ai_json_data': None
+                'crawl_timestamp': None,
+                'raw_html': notification_data['content'],
+                'ai_json_data': notification_data['content']
             }
             
             return self.db.save_program_to_db(notification_data['notification_id'], program_data)

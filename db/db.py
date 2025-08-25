@@ -1,6 +1,5 @@
 import sqlite3
 from pathlib import Path
-import logging
 from typing import List, Dict, Optional, Any
 import json
 
@@ -8,13 +7,14 @@ import sys
 import os
 # Add parent directory to path to import db module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.logging_config import setup_logger
 
 class BaseDB:
     """공통 데이터베이스 연결 및 테이블 생성 관리"""
     
     def __init__(self, path: str = "db/notice.db"):
         """SQLite database initialization"""
-        self.main_logger = self._setup_logger(__name__)
+        self.main_logger = setup_logger()
         self.db_path = Path(path)
         self.conn = self._config_data_based(self.db_path)
     
@@ -33,18 +33,6 @@ class BaseDB:
                 self.conn.commit()
             self.conn.close()
     
-    def _setup_logger(self, name):
-        logger = logging.getLogger(name)
-        
-        if not logger.handlers:
-            handler = logging.FileHandler('app.log', encoding='utf-8')
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.DEBUG)
-            logger.info("New logger created and configured-db")
-        
-        return logger
     
     def _config_data_based(self, path: str = "./db/notice.db"):
         """SQLite database connection and table creation"""
@@ -144,120 +132,6 @@ class CrawlerDB(BaseDB):
             return {"code": 1}
         except:
             return {"code": -1}
-
-    def get_notification_id_url(self) -> List[int]:
-        """Get all notification ID, url list"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('SELECT id, url FROM notificationList')
-            return cursor.fetchall()
-        except Exception as e:
-            self.main_logger.error(f"Get notification ID list failed: {e}")
-            return []
-    
-    def get_unsent_notifications(self, notification_id: int, from_time: str = None, to_time: str = None) -> List[Dict[str, Any]]:
-        """Get notification data added after specified time range (based on email_log)"""
-        cursor = self.conn.cursor()
-        
-        try:
-            # Check table existence
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (f'notification_data_{notification_id}',))
-            if not cursor.fetchone():
-                return []
-            
-            # Get last send time
-            if not from_time:
-                cursor.execute('''
-                    SELECT MAX(sent_timestamp) 
-                    FROM email_log 
-                    WHERE notification_id = ? AND status = 'success'
-                ''', (notification_id,))
-                result = cursor.fetchone()
-                last_sent_time = result[0] if result and result[0] else '1970-01-01 00:00:00'
-            else:
-                last_sent_time = from_time
-            query = f'''
-                SELECT id, link, title, crawl_timestamp, ai_json_data
-                FROM notification_data_{notification_id}
-                WHERE crawl_timestamp > ?
-            '''
-            params = [last_sent_time]
-            
-            if to_time:
-                query += ' AND crawl_timestamp <= ?'
-                params.append(to_time)
-            
-            query += ' ORDER BY crawl_timestamp DESC'
-            
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-            
-            notifications = []
-            for row in results:
-                notifications.append({
-                    'id': row[0],
-                    'link': row[1],
-                    'title': row[2],
-                    'crawl_timestamp': row[3],
-                    'ai_json_data': json.loads(row[4]) if row[4] else None
-                })
-            
-            return notifications
-            
-        except Exception as e:
-            self.main_logger.error(f"Get unsent notifications failed: {e}")
-            return []
-    
-    def log_email_send(self, notification_id: int, recipient_count: int, status: str = 'success', error_message: str = None) -> Dict[str, Any]:
-        """Save email sending log"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                INSERT INTO email_log (notification_id, recipient_count, status, error_message)
-                VALUES (?, ?, ?, ?)
-            ''', (notification_id, recipient_count, status, error_message))
-            
-            return {"code": 1, "message": "Email send log saved successfully"}
-        except Exception as e:
-            self.main_logger.error(f"Save email send log failed: {e}")
-            return {"code": -1, "message": str(e)}
-    
-    def get_email_stats(self, days: int = 7) -> Dict[str, Any]:
-        """Email sending statistics"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                SELECT 
-                    COUNT(*) as total_sends,
-                    SUM(recipient_count) as total_recipients,
-                    COUNT(CASE WHEN status = 'success' THEN 1 END) as successful_sends,
-                    COUNT(CASE WHEN status = 'error' THEN 1 END) as failed_sends
-                FROM email_log
-                WHERE sent_timestamp >= datetime('now', '-' || ? || ' days')
-            ''', (days,))
-            
-            result = cursor.fetchone()
-            
-            return {
-                'total_sends': result[0] or 0,
-                'total_recipients': result[1] or 0,
-                'successful_sends': result[2] or 0,
-                'failed_sends': result[3] or 0,
-                'success_rate': (result[2] / result[0] * 100) if result[0] > 0 else 0
-            }
-            
-        except Exception as e:
-            self.main_logger.error(f"Email stats query failed: {e}")
-            return {
-                'total_sends': 0,
-                'total_recipients': 0,
-                'successful_sends': 0,
-                'failed_sends': 0,
-                'success_rate': 0
-            }
     
     def get_existing_links(self, notification_id: int) -> set:
         """Get existing crawled links from DB"""
@@ -319,71 +193,6 @@ class CrawlerDB(BaseDB):
 
 class WebsiteDB(BaseDB):
     """웹사이트 관련 데이터베이스 작업"""
-    
-    def subscribe_user(self, user_id: str, notification_id: int) -> Dict[str, Any]:
-        """사용자를 특정 공지사항에 구독"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                INSERT OR REPLACE INTO user_subscriptions (user_id, notification_id, is_active)
-                VALUES (?, ?, 1)
-            ''', (user_id, notification_id))
-            return {"code": 1, "message": "구독 완료"}
-        except Exception as e:
-            self.main_logger.error(f"구독 실패: {e}")
-            return {"code": -1, "message": str(e)}
-    
-    def unsubscribe_user(self, user_id: str, notification_id: int) -> Dict[str, Any]:
-        """사용자의 특정 공지사항 구독 해제"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                UPDATE user_subscriptions 
-                SET is_active = 0 
-                WHERE user_id = ? AND notification_id = ?
-            ''', (user_id, notification_id))
-            return {"code": 1, "message": "구독 해제 완료"}
-        except Exception as e:
-            self.main_logger.error(f"구독 해제 실패: {e}")
-            return {"code": -1, "message": str(e)}
-    
-    def get_user_subscriptions(self, user_id: str) -> List[Dict[str, Any]]:
-        """사용자의 구독 목록 조회"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                SELECT us.notification_id, us.subscribed_at, us.is_active,
-                       nl.title, nl.url, nl.display_type, nl.college, nl.department, nl.major
-                FROM user_subscriptions us
-                JOIN notificationList nl ON us.notification_id = nl.id
-                WHERE us.user_id = ? AND us.is_active = 1
-                ORDER BY us.subscribed_at DESC
-            ''', (user_id,))
-            
-            results = cursor.fetchall()
-            subscriptions = []
-            
-            for row in results:
-                subscriptions.append({
-                    'notification_id': row[0],
-                    'subscribed_at': row[1],
-                    'is_active': bool(row[2]),
-                    'title': row[3],
-                    'url': row[4],
-                    'display_type': row[5],
-                    'college': row[6],
-                    'department': row[7],
-                    'major': row[8]
-                })
-            
-            return subscriptions
-        except Exception as e:
-            self.main_logger.error(f"구독 목록 조회 실패: {e}")
-            return []
-    
     def update_user_subscriptions(self, user_id: str, notification_ids: List[int]) -> Dict[str, Any]:
         """사용자의 구독 목록을 일괄 업데이트"""
         cursor = self.conn.cursor()
@@ -409,33 +218,6 @@ class WebsiteDB(BaseDB):
             self.main_logger.error(f"구독 업데이트 실패: {e}")
             return {"code": -1, "message": str(e)}
     
-    def get_notification_subscribers(self, notification_id: int) -> List[Dict[str, Any]]:
-        """특정 공지사항의 구독자 목록 조회"""
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                SELECT us.user_id, us.subscribed_at, u.email
-                FROM user_subscriptions us
-                JOIN user u ON us.user_id = u.id
-                WHERE us.notification_id = ? AND us.is_active = 1
-                ORDER BY us.subscribed_at DESC
-            ''', (notification_id,))
-            
-            results = cursor.fetchall()
-            subscribers = []
-            
-            for row in results:
-                subscribers.append({
-                    'user_id': row[0],
-                    'subscribed_at': row[1],
-                    'email': row[2]
-                })
-            
-            return subscribers
-        except Exception as e:
-            self.main_logger.error(f"구독자 목록 조회 실패: {e}")
-            return []
     
     def get_subscription_stats(self) -> Dict[str, Any]:
         """구독 통계 조회"""
@@ -608,5 +390,80 @@ class WebsiteDB(BaseDB):
             self.main_logger.error(f"사용자 삭제 실패: {e}")
             return {"code": -1, "message": str(e)}
 
-# 하위 호환성을 위한 별칭
-DB = CrawlerDB
+class EmailDB(BaseDB):
+    
+    def log_email_send(self, notification_id: int, recipient_count: int, status: str = 'success', error_message: str = None) -> Dict[str, Any]:
+        """Save email sending log"""
+        cursor = self.conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO email_log (notification_id, recipient_count, status, error_message)
+                VALUES (?, ?, ?, ?)
+            ''', (notification_id, recipient_count, status, error_message))
+            
+            return {"code": 1, "message": "Email send log saved successfully"}
+        except Exception as e:
+            self.main_logger.error(f"Save email send log failed: {e}")
+            return {"code": -1, "message": str(e)}
+    
+    def get_email_stats(self, days: int = 7) -> Dict[str, Any]:
+        """Email sending statistics"""
+        cursor = self.conn.cursor()
+        
+        try:
+            cursor.execute('''
+                SELECT 
+                    COUNT(*) as total_sends,
+                    SUM(recipient_count) as total_recipients,
+                    COUNT(CASE WHEN status = 'success' THEN 1 END) as successful_sends,
+                    COUNT(CASE WHEN status = 'error' THEN 1 END) as failed_sends
+                FROM email_log
+                WHERE sent_timestamp >= datetime('now', '-' || ? || ' days')
+            ''', (days,))
+            
+            result = cursor.fetchone()
+            
+            return {
+                'total_sends': result[0] or 0,
+                'total_recipients': result[1] or 0,
+                'successful_sends': result[2] or 0,
+                'failed_sends': result[3] or 0,
+                'success_rate': (result[2] / result[0] * 100) if result[0] > 0 else 0
+            }
+            
+        except Exception as e:
+            self.main_logger.error(f"Email stats query failed: {e}")
+            return {
+                'total_sends': 0,
+                'total_recipients': 0,
+                'successful_sends': 0,
+                'failed_sends': 0,
+                'success_rate': 0
+            }
+
+    def get_notification_subscribers(self, notification_id: int) -> List[str]:
+        """특정 공지사항의 구독자 목록 조회"""
+        cursor = self.conn.cursor()
+        
+        try:
+            cursor.execute('''
+                SELECT u.email
+                FROM user_subscriptions us
+                JOIN user u ON us.user_id = u.id
+                WHERE us.notification_id = ? AND us.is_active = 1
+                ORDER BY us.subscribed_at DESC
+            ''', (notification_id,))
+            
+            results = cursor.fetchall()
+            subscribers = []
+            
+            for row in results:
+                subscribers.append(row[0])
+            
+            return subscribers
+        except Exception as e:
+            self.main_logger.error(f"구독자 목록 조회 실패: {e}")
+            return []
+    
+    
